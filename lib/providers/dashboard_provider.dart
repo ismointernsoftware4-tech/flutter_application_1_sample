@@ -115,6 +115,9 @@ class DashboardProvider extends ChangeNotifier {
 
   String _selectedNavItem = 'Dashboard';
   bool _showAddUserForm = false;
+  bool _showAddItemSidebar = false;
+  bool _showAddLocationSidebar = false;
+  bool _showAddVendorSidebar = false;
   NewUserForm _newUserForm = NewUserForm();
   final FirebaseService _firebaseService = FirebaseService();
   List<String> _rolesList = [];
@@ -656,6 +659,9 @@ class DashboardProvider extends ChangeNotifier {
   List<User> get usersList => _usersList;
   String get selectedNavItem => _selectedNavItem;
   bool get showAddUserForm => _showAddUserForm;
+  bool get showAddItemSidebar => _showAddItemSidebar;
+  bool get showAddLocationSidebar => _showAddLocationSidebar;
+  bool get showAddVendorSidebar => _showAddVendorSidebar;
   NewUserForm get newUserForm => _newUserForm;
   List<String> get rolesList => _rolesList;
   List<Vendor> get vendors => List.unmodifiable(_vendors);
@@ -715,6 +721,38 @@ class DashboardProvider extends ChangeNotifier {
   void hideAddUserFormDialog() {
     _showAddUserForm = false;
     _newUserForm = NewUserForm();
+    notifyListeners();
+  }
+
+  void openAddItemSidebar() {
+    _showAddItemSidebar = true;
+    notifyListeners();
+  }
+
+  void closeAddItemSidebar() {
+    _showAddItemSidebar = false;
+    notifyListeners();
+  }
+
+  void openAddLocationSidebar() {
+    _showAddLocationSidebar = true;
+    notifyListeners();
+  }
+
+  void closeAddLocationSidebar() {
+    _showAddLocationSidebar = false;
+    notifyListeners();
+  }
+
+  void openAddVendorSidebar() {
+    _showAddVendorSidebar = true;
+    resetVendorFormFields();
+    notifyListeners();
+  }
+
+  void closeAddVendorSidebar() {
+    _showAddVendorSidebar = false;
+    resetVendorFormFields();
     notifyListeners();
   }
 
@@ -943,7 +981,7 @@ class DashboardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addStorageLocation({
+  Future<void> addStorageLocation({
     required String name,
     required String type,
     required String parentLocation,
@@ -951,7 +989,24 @@ class DashboardProvider extends ChangeNotifier {
     required String status,
     String manager = '',
     String description = '',
-  }) {
+  }) async {
+    // Save to Firestore
+    try {
+      await _firebaseService.saveStorageLocation(
+        name: name,
+        type: type,
+        parentLocation: parentLocation,
+        capacity: capacity,
+        status: status,
+        manager: manager,
+        description: description,
+      );
+    } catch (e) {
+      print('Error saving location to Firestore: $e');
+      // Continue with local save even if Firestore fails
+    }
+
+    // Also add to local list for immediate UI update
     final nextNumber = _storageLocations.length + 1;
     final id = 'LOC${nextNumber.toString().padLeft(3, '0')}';
     final location = StorageLocation(
@@ -972,7 +1027,7 @@ class DashboardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addVendorFromFields() {
+  Future<void> addVendorFromFields() async {
     final vendorName = vendorFieldValue('vendor_name');
     final contactName = vendorFieldValue('contact_name');
     final phone = vendorFieldValue('phone');
@@ -982,6 +1037,29 @@ class DashboardProvider extends ChangeNotifier {
         phone.isEmpty ||
         email.isEmpty) {
       throw Exception('Please fill in all required fields.');
+    }
+
+    // Collect all vendor field data for Firestore
+    final vendorData = <String, dynamic>{};
+    for (final section in _vendorSections) {
+      for (final field in section.fields) {
+        final value = vendorFieldValue(field.id);
+        if (value.isNotEmpty) {
+          vendorData[field.id] = value;
+        }
+      }
+    }
+    
+    // Add vendor name explicitly
+    vendorData['vendor_name'] = vendorName;
+    vendorData['name'] = vendorName;
+
+    // Save to Firestore
+    try {
+      await _firebaseService.saveVendor(vendorData);
+    } catch (e) {
+      print('Error saving vendor to Firestore: $e');
+      // Continue with local save even if Firestore fails
     }
 
     final vendor = Vendor(
@@ -1040,6 +1118,35 @@ class DashboardProvider extends ChangeNotifier {
       await _firebaseService.deleteInventoryManagement();
     } catch (e) {
       print('Error deleting old Inventory Management: $e');
+    }
+  }
+
+  // Save item to Firestore
+  Future<void> saveItem(Map<String, dynamic> itemData) async {
+    try {
+      // Save to Firestore
+      final docId = await _firebaseService.saveItem(itemData);
+      
+      // Also add to local list for immediate UI update
+      final item = ItemMaster(
+        itemCode: itemData['itemCode'] ?? '',
+        itemName: itemData['itemName'] ?? '',
+        manufacturer: itemData['manufacturer'] ?? '',
+        type: itemData['itemType'] ?? '',
+        category: itemData['category'] ?? '',
+        unit: itemData['unitOfMeasure'] ?? '',
+        storage: itemData['storageConditions'] ?? '',
+        stock: itemData['stock'] ?? 0,
+        status: itemData['status'] ?? 'Active',
+      );
+      
+      _itemMasterList = [..._itemMasterList, item];
+      notifyListeners();
+      
+      print('Item saved successfully with ID: $docId');
+    } catch (e) {
+      print('Error saving item: $e');
+      throw Exception('Error saving item: $e');
     }
   }
 }

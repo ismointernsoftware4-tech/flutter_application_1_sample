@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/dashboard_models.dart';
 import '../providers/dashboard_provider.dart';
-import 'add_location_screen.dart';
+import '../widgets/add_location_sidebar.dart';
 
 class StorageLocationsScreen extends StatelessWidget {
   const StorageLocationsScreen({super.key});
@@ -11,27 +11,57 @@ class StorageLocationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final locations = context.watch<DashboardProvider>().storageLocations;
+    final showSidebar = context.watch<DashboardProvider>().showAddLocationSidebar;
 
-    return Container(
-      color: Colors.grey[100],
-      child: Column(
-        children: [
-          _header(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _titleBar(context),
-                  const SizedBox(height: 24),
-                  _table(locations),
-                ],
+    return Stack(
+      children: [
+        Container(
+          color: Colors.grey[100],
+          child: Column(
+            children: [
+              _header(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _titleBar(context),
+                      const SizedBox(height: 24),
+                      _table(locations),
+                    ],
+                  ),
+                ),
               ),
+            ],
+          ),
+        ),
+        // Sidebar overlay
+        if (showSidebar)
+          Positioned.fill(
+            child: Stack(
+              children: [
+                // Backdrop
+                GestureDetector(
+                  onTap: () => context.read<DashboardProvider>().closeAddLocationSidebar(),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ),
+                // Sidebar
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: GestureDetector(
+                    onTap: () {}, // Prevent closing when clicking sidebar
+                    child: const AddLocationSidebar(),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -116,11 +146,7 @@ class StorageLocationsScreen extends StatelessWidget {
             const SizedBox(width: 12),
             ElevatedButton.icon(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AddLocationScreen(),
-                  ),
-                );
+                context.read<DashboardProvider>().openAddLocationSidebar();
               },
               icon: const Icon(Icons.add),
               label: const Text('Add Location'),

@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/dashboard_models.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/vendor_card.dart';
-import 'add_vendor_screen.dart';
+import '../widgets/add_vendor_sidebar.dart';
 
 class VendorManagementScreen extends StatefulWidget {
   const VendorManagementScreen({super.key});
@@ -25,24 +25,54 @@ class _VendorManagementScreenState extends State<VendorManagementScreen> {
       if (_selectedFilter == 'All') return true;
       return vendor.status.toLowerCase() == _selectedFilter.toLowerCase();
     }).toList();
+    final showSidebar = provider.showAddVendorSidebar;
 
-    return Container(
-      color: Colors.grey[100],
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 24),
-            _buildFilters(),
-            const SizedBox(height: 24),
-            _buildActionBar(),
-            const SizedBox(height: 24),
-            _buildVendorGrid(vendors),
-          ],
+    return Stack(
+      children: [
+        Container(
+          color: Colors.grey[100],
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 24),
+                _buildFilters(),
+                const SizedBox(height: 24),
+                _buildActionBar(),
+                const SizedBox(height: 24),
+                _buildVendorGrid(vendors),
+              ],
+            ),
+          ),
         ),
-      ),
+        // Sidebar overlay
+        if (showSidebar)
+          Positioned.fill(
+            child: Stack(
+              children: [
+                // Backdrop
+                GestureDetector(
+                  onTap: () => context.read<DashboardProvider>().closeAddVendorSidebar(),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ),
+                // Sidebar
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: GestureDetector(
+                    onTap: () {}, // Prevent closing when clicking sidebar
+                    child: const AddVendorSidebar(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 
@@ -151,15 +181,7 @@ class _VendorManagementScreenState extends State<VendorManagementScreen> {
         ),
         ElevatedButton.icon(
           onPressed: () {
-            final provider =
-                Provider.of<DashboardProvider>(context, listen: false);
-            provider.resetVendorFormFields();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const AddVendorScreen(),
-              ),
-            );
+            context.read<DashboardProvider>().openAddVendorSidebar();
           },
           icon: const Icon(Icons.add),
           label: const Text('Add New Vendor'),

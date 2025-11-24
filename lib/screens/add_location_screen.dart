@@ -298,22 +298,36 @@ class _AddLocationView extends StatelessWidget {
     BuildContext context,
     AddLocationProvider provider,
   ) async {
-    final dashboard = context.read<DashboardProvider>();
-    dashboard.addStorageLocation(
-      name: provider.nameController.text.trim(),
-      type: provider.selectedType,
-      parentLocation: provider.selectedParent == 'None (Top Level)'
-          ? '-'
-          : provider.selectedParent,
-      capacity: provider.parsedCapacity(),
-      status: provider.selectedStatus,
-      manager: provider.managerController.text.trim(),
-      description: provider.descriptionController.text.trim(),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Location created successfully')),
-    );
-    Navigator.of(context).pop();
+    try {
+      final dashboard = context.read<DashboardProvider>();
+      await dashboard.addStorageLocation(
+        name: provider.nameController.text.trim(),
+        type: provider.selectedType,
+        parentLocation: provider.selectedParent == 'None (Top Level)'
+            ? '-'
+            : provider.selectedParent,
+        capacity: provider.parsedCapacity(),
+        status: provider.selectedStatus,
+        manager: provider.managerController.text.trim(),
+        description: provider.descriptionController.text.trim(),
+      );
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location created successfully')),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating location: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 

@@ -469,6 +469,197 @@ class FirebaseService {
       // Don't throw - this is a cleanup operation
     }
   }
+
+  // Save item to Firebase: Item Management -> item_Master (document) -> Item_List (subcollection)
+  // Path: /Item Management/item_Master/Item_List/{documentId}
+  Future<String> saveItem(Map<String, dynamic> itemData) async {
+    if (!isAvailable) {
+      print('Firebase not available. Item not saved to Firebase.');
+      throw Exception('Firebase not available');
+    }
+    try {
+      // Ensure the item_Master document exists (required for subcollections in Firestore)
+      final itemMasterDocRef = _firestore!
+          .collection(_inventoryManagementCollection)
+          .doc('item_Master');
+      
+      // Create item_Master document if it doesn't exist
+      await itemMasterDocRef.set({'type': 'item_master'}, SetOptions(merge: true));
+      
+      // Add item as a document in Item_List subcollection under item_Master document
+      final docRef = await itemMasterDocRef
+          .collection('Item_List')
+          .add({
+        ...itemData,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      print('Item saved successfully to Item Management -> item_Master -> Item_List -> ${docRef.id}');
+      return docRef.id;
+    } catch (e) {
+      print('Error saving item to Firebase: $e');
+      throw Exception('Error saving item: $e');
+    }
+  }
+
+  // Save vendor to Firebase: Item Management -> VendorMangement (document) -> Felids (subcollection) -> Vendor Name (document)
+  // Path: /Item Management/VendorMangement/Felids/{vendorName}
+  Future<String> saveVendor(Map<String, dynamic> vendorData) async {
+    if (!isAvailable) {
+      print('Firebase not available. Vendor not saved to Firebase.');
+      throw Exception('Firebase not available');
+    }
+    try {
+      // Get vendor name from data (use vendor_name field or vendorName)
+      final vendorName = vendorData['vendor_name'] ?? 
+                         vendorData['vendorName'] ?? 
+                         vendorData['name'] ?? 
+                         'Unknown Vendor';
+      
+      // Ensure the VendorMangement document exists (required for subcollections in Firestore)
+      final vendorManagementDocRef = _firestore!
+          .collection(_inventoryManagementCollection)
+          .doc('VendorMangement');
+      
+      // Create VendorMangement document if it doesn't exist
+      await vendorManagementDocRef.set({'type': 'vendor_management'}, SetOptions(merge: true));
+      
+      // Save vendor data as a document in Felids subcollection with vendor name as document ID
+      await vendorManagementDocRef
+          .collection('Felids')
+          .doc(vendorName)
+          .set({
+        ...vendorData,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      
+      print('Vendor saved successfully to Item Management -> VendorMangement -> Felids -> $vendorName');
+      return vendorName;
+    } catch (e) {
+      print('Error saving vendor to Firebase: $e');
+      throw Exception('Error saving vendor: $e');
+    }
+  }
+
+  // Save storage location to Firebase with hierarchical path structure
+  // Path: /Item Management/Storage/{type}/{locationName}/{nestedLevels}...
+  // Example: /Item Management/Storage/Warehouse/Fridge1/section1/rack1
+  Future<String> saveStorageLocation({
+    required String name,
+    required String type,
+    required String parentLocation,
+    required int capacity,
+    required String status,
+    String manager = '',
+    String description = '',
+    List<String>? locationPath, // Optional: full path for nested locations
+  }) async {
+    if (!isAvailable) {
+      print('Firebase not available. Location not saved to Firebase.');
+      throw Exception('Firebase not available');
+    }
+    try {
+      // Ensure the Storage document exists
+      final storageDocRef = _firestore!
+          .collection(_inventoryManagementCollection)
+          .doc('Storage');
+      
+      await storageDocRef.set({'type': 'storage'}, SetOptions(merge: true));
+      
+      DocumentReference locationRef;
+      
+      // Simple case: save at type level
+      // Path: /Item Management/Storage/{type}/{locationName}
+      // For nested locations, the parentLocation field stores the hierarchy info
+      final typeCollection = storageDocRef.collection(type);
+      locationRef = typeCollection.doc(name);
+      
+      // Save location data
+      await locationRef.set({
+        'name': name,
+        'type': type,
+        'parentLocation': parentLocation,
+        'capacity': capacity,
+        'status': status,
+        'manager': manager,
+        'description': description,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      
+      final path = locationPath != null 
+          ? 'Item Management -> Storage -> ${locationPath.join(' -> ')} -> $name'
+          : 'Item Management -> Storage -> $type -> $name';
+      print('Location saved successfully to $path');
+      return name;
+    } catch (e) {
+      print('Error saving location to Firebase: $e');
+      throw Exception('Error saving location: $e');
+    }
+  }
+
+  // Save item at a specific location with full hierarchical path
+  // Path: /Item Management/Storage/{type}/{locationName}/{nestedLevels}/{itemCode}/{itemName}
+  // Example: /Item Management/Storage/Warehouse/Fridge1/section1/rack1/item001/Paracetamol 500mg
+  Future<void> saveItemAtLocation({
+    required String itemCode,
+    required String itemName,
+    required List<String> locationPath, // e.g., ['Warehouse', 'Fridge1', 'section1', 'rack1']
+  }) async {
+    if (!isAvailable) {
+      print('Firebase not available. Item location not saved to Firebase.');
+      throw Exception('Firebase not available');
+    }
+    try {
+      if (locationPath.isEmpty) {
+        throw Exception('Location path cannot be empty');
+      }
+      
+      // Ensure the Storage document exists
+      final storageDocRef = _firestore!
+          .collection(_inventoryManagementCollection)
+          .doc('Storage');
+      
+      await storageDocRef.set({'type': 'storage'}, SetOptions(merge: true));
+      
+      // Navigate through the hierarchical path
+      DocumentReference currentRef = storageDocRef;
+      
+      // Navigate through location hierarchy
+      for (int i = 0; i < locationPath.length; i++) {
+        final levelName = locationPath[i];
+        if (i == 0) {
+          // First level is the type (subcollection)
+          currentRef = currentRef.collection(levelName).doc(locationPath.length > 1 ? locationPath[1] : levelName);
+        } else if (i < locationPath.length - 1) {
+          // Intermediate levels are subcollections
+          currentRef = currentRef.collection(levelName).doc(locationPath[i + 1]);
+        } else {
+          // Last location level
+          currentRef = currentRef.collection(levelName).doc(itemCode);
+        }
+      }
+      
+      // Create itemCode subcollection and save item
+      await currentRef
+          .collection(itemCode)
+          .doc(itemName)
+          .set({
+        'itemCode': itemCode,
+        'itemName': itemName,
+        'locationPath': locationPath,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      
+      print('Item saved at location: Item Management -> Storage -> ${locationPath.join(' -> ')} -> $itemCode -> $itemName');
+    } catch (e) {
+      print('Error saving item at location to Firebase: $e');
+      throw Exception('Error saving item at location: $e');
+    }
+  }
 }
 
 class RolePermissionsData {

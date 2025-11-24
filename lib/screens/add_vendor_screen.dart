@@ -119,29 +119,33 @@ class _AddVendorScreenState extends State<AddVendorScreen> {
                             ),
                             const SizedBox(width: 16),
                             ElevatedButton.icon(
-                              onPressed: () {
+                              onPressed: () async {
                                 if (_formKey.currentState?.validate() ?? false) {
                                   try {
-                                    provider.addVendorFromFields();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content:
-                                            Text('Vendor saved successfully'),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                    Navigator.pop(context);
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          e
-                                              .toString()
-                                              .replaceFirst('Exception: ', ''),
+                                    await provider.addVendorFromFields();
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content:
+                                              Text('Vendor saved successfully'),
+                                          backgroundColor: Colors.green,
                                         ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
+                                      );
+                                      Navigator.pop(context);
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            e
+                                                .toString()
+                                                .replaceFirst('Exception: ', ''),
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
                                   }
                                 }
                               },

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
-import 'add_item_screen.dart';
+import '../widgets/add_item_sidebar.dart';
 
 class ItemMasterScreen extends StatelessWidget {
   const ItemMasterScreen({super.key});
@@ -10,8 +10,11 @@ class ItemMasterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<DashboardProvider>(context);
     final items = provider.itemMasterList;
+    final showSidebar = provider.showAddItemSidebar;
 
-    return Column(
+    return Stack(
+      children: [
+        Column(
       children: [
         // Top Header with Search and Add New Item button
         Container(
@@ -47,11 +50,7 @@ class ItemMasterScreen extends StatelessWidget {
                 children: [
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const AddItemScreen(),
-                        ),
-                      );
+                      provider.openAddItemSidebar();
                     },
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add New Item'),
@@ -398,6 +397,33 @@ class ItemMasterScreen extends StatelessWidget {
             ),
           ),
         ),
+      ],
+        ),
+        // Sidebar overlay
+        if (showSidebar)
+          Positioned.fill(
+            child: Stack(
+              children: [
+                // Backdrop
+                GestureDetector(
+                  onTap: () => provider.closeAddItemSidebar(),
+                  child: Container(
+                    color: Colors.black.withOpacity(0.5),
+                  ),
+                ),
+                // Sidebar
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: GestureDetector(
+                    onTap: () {}, // Prevent closing when clicking sidebar
+                    child: const AddItemSidebar(),
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
