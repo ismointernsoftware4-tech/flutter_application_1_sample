@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../providers/dashboard_provider.dart';
+import '../constants/navigation_items.dart';
 
 class Sidebar extends StatelessWidget {
   const Sidebar({super.key});
@@ -8,21 +10,8 @@ class Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<DashboardProvider>(context);
-    
-    final navItems = [
-      {'title': 'Dashboard', 'icon': Icons.dashboard},
-      {'title': 'Item Master', 'icon': Icons.inventory_2},
-      {'title': 'Procurement', 'icon': Icons.shopping_cart},
-      {'title': 'Vendor Management', 'icon': Icons.business},
-      {'title': 'GRN & Receiving', 'icon': Icons.local_shipping},
-      {'title': 'Inventory Control', 'icon': Icons.assignment},
-      {'title': 'Storage Locations', 'icon': Icons.location_on},
-      {'title': 'Traceability', 'icon': Icons.timeline},
-      {'title': 'Approvals', 'icon': Icons.check_circle},
-      {'title': 'Reports', 'icon': Icons.bar_chart},
-      {'title': 'Users & Roles', 'icon': Icons.people},
-      {'title': 'Settings', 'icon': Icons.settings},
-    ];
+    final authProvider = Provider.of<AuthProvider>(context);
+    final navItems = NavigationItems.sidebarItems;
 
     return Container(
       width: 250,
@@ -95,38 +84,63 @@ class Sidebar extends StatelessWidget {
             decoration: const BoxDecoration(
               border: Border(top: BorderSide(color: Colors.white24, width: 1)),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.person, color: Colors.white, size: 20),
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.person, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            authProvider.sessionName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            authProvider.sessionEmail,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Admin User',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => authProvider.logout(),
+                    icon: const Icon(Icons.logout, size: 16, color: Colors.white),
+                    label: const Text(
+                      'Logout',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white24),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      Text(
-                        'admin@inv.com',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ],

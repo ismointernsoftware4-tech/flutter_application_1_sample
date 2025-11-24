@@ -6,6 +6,17 @@ import '../widgets/charts.dart';
 import '../widgets/transactions_table.dart';
 import '../providers/dashboard_provider.dart';
 import 'item_master_screen.dart';
+import 'users_roles_screen.dart';
+import 'procurement_screen.dart';
+import 'grn_receiving_screen.dart';
+import 'inventory_control_screen.dart';
+import 'storage_locations_screen.dart';
+import 'traceability_screen.dart';
+import 'approvals_screen.dart';
+import 'reports_screen.dart';
+import 'settings_admin_screen.dart';
+import 'item_management_screen.dart';
+import 'vendor_management_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -24,6 +35,50 @@ class DashboardScreen extends StatelessWidget {
                 
                 if (selectedNavItem == 'Item Master') {
                   return const ItemMasterScreen();
+                }
+                
+                if (selectedNavItem == 'Item Management') {
+                  return const ItemManagementScreen();
+                }
+                
+                if (selectedNavItem == 'Vendor Management') {
+                  return const VendorManagementScreen();
+                }
+                
+                if (selectedNavItem == 'Users & Roles') {
+                  return const UsersRolesScreen();
+                }
+                
+                if (selectedNavItem == 'Procurement') {
+                  return const ProcurementScreen();
+                }
+                
+                if (selectedNavItem == 'GRN & Receiving') {
+                  return const GrnReceivingScreen();
+                }
+                
+                if (selectedNavItem == 'Inventory Control') {
+                  return const InventoryControlScreen();
+                }
+                
+                if (selectedNavItem == 'Storage Locations') {
+                  return const StorageLocationsScreen();
+                }
+                
+                if (selectedNavItem == 'Traceability') {
+                  return const TraceabilityScreen();
+                }
+                
+                if (selectedNavItem == 'Approvals') {
+                  return const ApprovalsScreen();
+                }
+                
+                if (selectedNavItem == 'Reports') {
+                  return const ReportsScreen();
+                }
+                
+                if (selectedNavItem == 'Settings') {
+                  return const SettingsAdminScreen();
                 }
                 
                 // Default Dashboard view

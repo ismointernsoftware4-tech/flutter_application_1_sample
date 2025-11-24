@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
+import 'add_item_screen.dart';
 
 class ItemMasterScreen extends StatelessWidget {
   const ItemMasterScreen({super.key});
@@ -46,7 +47,11 @@ class ItemMasterScreen extends StatelessWidget {
                 children: [
                   ElevatedButton.icon(
                     onPressed: () {
-                      // Add New Item functionality
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const AddItemScreen(),
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add New Item'),

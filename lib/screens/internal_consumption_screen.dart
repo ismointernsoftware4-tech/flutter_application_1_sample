@@ -1,0 +1,195 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../models/dashboard_models.dart';
+import '../providers/dashboard_provider.dart';
+
+class InternalConsumptionScreen extends StatelessWidget {
+  const InternalConsumptionScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final records = context.watch<DashboardProvider>().internalConsumptions;
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      body: SafeArea(
+        child: Column(
+          children: [
+            _header(context, 'Internal Consumption'),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: _consumptionTable(records),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _header(BuildContext context, String title) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: const BoxDecoration(color: Colors.white),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _consumptionTable(List<InternalConsumptionRecord> records) {
+    final headers = [
+      'ID',
+      'Date',
+      'Department',
+      'Item',
+      'Qty',
+      'Purpose',
+      'User',
+    ];
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(
+                child: Text(
+                  'Record items consumed internally by departments.',
+                  style: TextStyle(color: Colors.black54),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.add),
+                label: const Text('Record Consumption'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _dataTable(
+            headers: headers,
+            rows: records
+                .map(
+                  (record) => [
+                    _linkText(record.id),
+                    Text(record.date),
+                    Text(record.department),
+                    Text(record.item),
+                    Text(record.quantity.toString()),
+                    Text(record.purpose),
+                    Text(record.user),
+                  ],
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dataTable({
+    required List<String> headers,
+    required List<List<Widget>> rows,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: headers
+                  .map(
+                    (header) => Expanded(
+                      child: Text(
+                        header,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          const Divider(height: 1),
+          ...rows.map(
+            (cells) => Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: List.generate(cells.length, (index) {
+                  return Expanded(child: cells[index]);
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _linkText(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: Colors.blue[700],
+        fontWeight: FontWeight.w600,
+        decoration: TextDecoration.underline,
+      ),
+    );
+  }
+}
+
