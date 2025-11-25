@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../models/dashboard_models.dart';
+import '../utils/responsive_helper.dart';
 import 'roles_management_screen.dart';
 
 class UsersRolesScreen extends StatefulWidget {
@@ -115,22 +116,32 @@ class _UsersRolesScreenState extends State<UsersRolesScreen> {
                 padding: const EdgeInsets.all(20),
                 color: Colors.white,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      width: 300,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8),
+                    // Menu icon for mobile/tablet
+                    if (ResponsiveHelper.isMobile(context) || ResponsiveHelper.isTablet(context))
+                      IconButton(
+                        icon: const Icon(Icons.menu),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        tooltip: 'Open menu',
                       ),
-                      child: const TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search...',
-                          prefixIcon: Icon(Icons.search, color: Colors.grey),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          hintStyle: TextStyle(color: Colors.grey),
+                    const Spacer(),
+                    Flexible(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 300),
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Search...',
+                            prefixIcon: Icon(Icons.search, color: Colors.grey),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            hintStyle: TextStyle(color: Colors.grey),
+                          ),
                         ),
                       ),
                     ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../services/firebase_service.dart';
+import '../utils/responsive_helper.dart';
 
 class ItemManagementScreen extends StatefulWidget {
   const ItemManagementScreen({super.key});
@@ -36,42 +37,70 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
             children: [
               // Top Header with Search
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(ResponsiveHelper.getScreenPadding(context).horizontal / 2),
                 color: Colors.white,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 300,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search...',
-                          prefixIcon: Icon(Icons.search, color: Colors.grey),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          hintStyle: TextStyle(color: Colors.grey),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isMobile = ResponsiveHelper.isMobile(context);
+                    final isTablet = ResponsiveHelper.isTablet(context);
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    final isSmallScreen = screenWidth < 700;
+                    
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            if (isMobile || isTablet)
+                              IconButton(
+                                icon: const Icon(Icons.menu),
+                                onPressed: () => Scaffold.of(context).openDrawer(),
+                                tooltip: 'Open menu',
+                              ),
+                          ],
                         ),
-                      ),
-                    ),
-                  ],
+                        Flexible(
+                          child: Container(
+                            constraints: BoxConstraints(
+                              maxWidth: isSmallScreen ? double.infinity : 300,
+                            ),
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const TextField(
+                              decoration: InputDecoration(
+                                hintText: 'Search...',
+                                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                hintStyle: TextStyle(color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
               // Header Section
               Container(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+                padding: EdgeInsets.fromLTRB(
+                  ResponsiveHelper.getScreenPadding(context).horizontal,
+                  ResponsiveHelper.getScreenPadding(context).vertical,
+                  ResponsiveHelper.getScreenPadding(context).horizontal,
+                  20,
+                ),
                 color: Colors.grey[100],
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Item Management',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: ResponsiveHelper.getTitleFontSize(context),
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
@@ -80,7 +109,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                     Text(
                       'View roles from Inventory collection in Firebase.',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: ResponsiveHelper.isMobile(context) ? 12 : 14,
                         color: Colors.grey[600],
                       ),
                     ),
@@ -90,7 +119,12 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
               // Main Content Card
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  padding: EdgeInsets.fromLTRB(
+                    ResponsiveHelper.getScreenPadding(context).horizontal,
+                    0,
+                    ResponsiveHelper.getScreenPadding(context).horizontal,
+                    ResponsiveHelper.getScreenPadding(context).vertical,
+                  ),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,

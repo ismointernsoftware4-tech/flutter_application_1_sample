@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/dashboard_models.dart';
 import '../providers/dashboard_provider.dart';
+import '../utils/responsive_helper.dart';
 
 class InternalTransfersScreen extends StatelessWidget {
   const InternalTransfersScreen({super.key});
@@ -18,8 +19,8 @@ class InternalTransfersScreen extends StatelessWidget {
             _header(context, 'Internal Stock Transfers'),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: _transferTable(transfers),
+                padding: ResponsiveHelper.getScreenPadding(context),
+                child: _transferTable(context, transfers),
               ),
             ),
           ],
@@ -29,8 +30,14 @@ class InternalTransfersScreen extends StatelessWidget {
   }
 
   Widget _header(BuildContext context, String title) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenPadding.horizontal,
+        vertical: isMobile ? 16 : 20,
+      ),
       decoration: const BoxDecoration(color: Colors.white),
       child: Row(
         children: [
@@ -38,12 +45,15 @@ class InternalTransfersScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+          SizedBox(width: isMobile ? 8 : 12),
+          Flexible(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getTitleFontSize(context),
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -51,7 +61,7 @@ class InternalTransfersScreen extends StatelessWidget {
     );
   }
 
-  Widget _transferTable(List<StockTransferRecord> transfers) {
+  Widget _transferTable(BuildContext context, List<StockTransferRecord> transfers) {
     final headers = [
       'Transfer ID',
       'Date',
@@ -62,6 +72,7 @@ class InternalTransfersScreen extends StatelessWidget {
       'Actions',
     ];
     return _tableContainer(
+      context: context,
       title: 'Manage stock movements between internal locations.',
       actionLabel: 'New Transfer',
       headers: headers,
@@ -82,13 +93,14 @@ class InternalTransfersScreen extends StatelessWidget {
   }
 
   Widget _tableContainer({
+    required BuildContext context,
     required String title,
     required String actionLabel,
     required List<String> headers,
     required List<List<Widget>> rows,
   }) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: ResponsiveHelper.getScreenPadding(context),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -103,30 +115,46 @@ class InternalTransfersScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(color: Colors.black54),
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.add),
-                label: Text(actionLabel),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = ResponsiveHelper.isMobile(context);
+              
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: isMobile ? 12 : 14,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                  SizedBox(width: isMobile ? 8 : 16),
+                  Flexible(
+                    child: ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.add),
+                      label: Text(
+                        isMobile ? 'New' : actionLabel,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 16 : 20,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
           _dataTable(headers: headers, rows: rows),

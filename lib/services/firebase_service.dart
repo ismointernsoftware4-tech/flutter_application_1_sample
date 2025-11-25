@@ -503,6 +503,60 @@ class FirebaseService {
     }
   }
 
+  // Fetch all items from Firebase: Item Management -> item_Master -> Item_List
+  // Path: /Item Management/item_Master/Item_List/{documentId}
+  Stream<List<Map<String, dynamic>>> getItems() {
+    if (!isAvailable) {
+      return Stream.value([]);
+    }
+    try {
+      return _firestore!
+          .collection(_inventoryManagementCollection)
+          .doc('item_Master')
+          .collection('Item_List')
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          final data = doc.data();
+          return {
+            'id': doc.id,
+            ...data,
+          };
+        }).toList();
+      });
+    } catch (e) {
+      print('Error fetching items from Firebase: $e');
+      return Stream.value([]);
+    }
+  }
+
+  // Fetch all items once (non-streaming)
+  Future<List<Map<String, dynamic>>> fetchItems() async {
+    if (!isAvailable) {
+      return [];
+    }
+    try {
+      final snapshot = await _firestore!
+          .collection(_inventoryManagementCollection)
+          .doc('item_Master')
+          .collection('Item_List')
+          .orderBy('createdAt', descending: true)
+          .get();
+      
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          ...data,
+        };
+      }).toList();
+    } catch (e) {
+      print('Error fetching items from Firebase: $e');
+      return [];
+    }
+  }
+
   // Save vendor to Firebase: Item Management -> VendorMangement (document) -> Felids (subcollection) -> Vendor Name (document)
   // Path: /Item Management/VendorMangement/Felids/{vendorName}
   Future<String> saveVendor(Map<String, dynamic> vendorData) async {

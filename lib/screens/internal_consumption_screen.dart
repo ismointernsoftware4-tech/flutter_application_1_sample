@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/dashboard_models.dart';
 import '../providers/dashboard_provider.dart';
+import '../utils/responsive_helper.dart';
 
 class InternalConsumptionScreen extends StatelessWidget {
   const InternalConsumptionScreen({super.key});
@@ -18,8 +19,8 @@ class InternalConsumptionScreen extends StatelessWidget {
             _header(context, 'Internal Consumption'),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: _consumptionTable(records),
+                padding: ResponsiveHelper.getScreenPadding(context),
+                child: _consumptionTable(context, records),
               ),
             ),
           ],
@@ -29,8 +30,14 @@ class InternalConsumptionScreen extends StatelessWidget {
   }
 
   Widget _header(BuildContext context, String title) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenPadding.horizontal,
+        vertical: isMobile ? 16 : 20,
+      ),
       decoration: const BoxDecoration(color: Colors.white),
       child: Row(
         children: [
@@ -38,12 +45,15 @@ class InternalConsumptionScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+          SizedBox(width: isMobile ? 8 : 12),
+          Flexible(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getTitleFontSize(context),
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -51,7 +61,7 @@ class InternalConsumptionScreen extends StatelessWidget {
     );
   }
 
-  Widget _consumptionTable(List<InternalConsumptionRecord> records) {
+  Widget _consumptionTable(BuildContext context, List<InternalConsumptionRecord> records) {
     final headers = [
       'ID',
       'Date',
@@ -62,7 +72,7 @@ class InternalConsumptionScreen extends StatelessWidget {
       'User',
     ];
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: ResponsiveHelper.getScreenPadding(context),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -77,30 +87,46 @@ class InternalConsumptionScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: Text(
-                  'Record items consumed internally by departments.',
-                  style: TextStyle(color: Colors.black54),
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.add),
-                label: const Text('Record Consumption'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = ResponsiveHelper.isMobile(context);
+              
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Record items consumed internally by departments.',
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: isMobile ? 12 : 14,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                  SizedBox(width: isMobile ? 8 : 16),
+                  Flexible(
+                    child: ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.add),
+                      label: Text(
+                        isMobile ? 'Record' : 'Record Consumption',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 16 : 20,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
           _dataTable(

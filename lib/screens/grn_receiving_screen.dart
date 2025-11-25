@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/dashboard_models.dart';
 import '../providers/dashboard_provider.dart';
+import '../utils/responsive_helper.dart';
 
 class GrnReceivingScreen extends StatelessWidget {
   const GrnReceivingScreen({super.key});
@@ -15,10 +16,10 @@ class GrnReceivingScreen extends StatelessWidget {
       color: Colors.grey[100],
       child: Column(
         children: [
-          _buildHeader(),
+          _buildHeader(context),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: ResponsiveHelper.getScreenPadding(context),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -34,38 +35,68 @@ class GrnReceivingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+    final searchWidth = ResponsiveHelper.getSearchBarWidth(context);
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenPadding.horizontal,
+        vertical: isMobile ? 16 : 20,
+      ),
       decoration: const BoxDecoration(color: Colors.white),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'GRN & Receiving',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(
-            width: 280,
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final isSmallScreen = screenWidth < 700;
+          
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  if (isMobile || isTablet)
+                    IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      tooltip: 'Open menu',
+                    ),
+                  if (!isSmallScreen)
+                    Text(
+                      'GRN & Receiving',
+                      style: TextStyle(
+                        fontSize: ResponsiveHelper.getTitleFontSize(context),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                ],
               ),
-            ),
-          ),
-        ],
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isSmallScreen ? double.infinity : searchWidth,
+                  ),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -174,15 +205,25 @@ class GrnReceivingScreen extends StatelessWidget {
                   ),
                   Expanded(
                     flex: 3,
-                    child: Row(
+                    child: Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
                       children: [
                         IconButton(
                           icon: const Icon(Icons.remove_red_eye_outlined),
                           onPressed: () {},
+                          iconSize: 20,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          tooltip: 'View',
                         ),
                         IconButton(
                           icon: const Icon(Icons.check_circle_outline),
                           onPressed: () {},
+                          iconSize: 20,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          tooltip: 'Approve',
                         ),
                       ],
                     ),

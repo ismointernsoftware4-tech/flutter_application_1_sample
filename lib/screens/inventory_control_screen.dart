@@ -9,6 +9,7 @@ import 'branch_transfers_screen.dart';
 import 'stock_returns_screen.dart';
 import 'internal_consumption_screen.dart';
 import '../providers/dashboard_provider.dart';
+import '../utils/responsive_helper.dart';
 
 class InventoryControlScreen extends StatelessWidget {
   const InventoryControlScreen({super.key});
@@ -21,7 +22,7 @@ class InventoryControlScreen extends StatelessWidget {
       color: Colors.grey[100],
       child: Column(
         children: [
-          _header(),
+          _header(context),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -51,38 +52,72 @@ class InventoryControlScreen extends StatelessWidget {
     );
   }
 
-  Widget _header() {
+  Widget _header(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenPadding.horizontal,
+        vertical: isMobile ? 16 : 20,
+      ),
       decoration: const BoxDecoration(color: Colors.white),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Inventory Control',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(
-            width: 280,
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final isSmallScreen = screenWidth < 700;
+          
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  // Menu icon for mobile/tablet
+                  if (isMobile || isTablet)
+                    IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      tooltip: 'Open menu',
+                    ),
+                  if (!isSmallScreen)
+                    Flexible(
+                      child: Text(
+                        'Inventory Control',
+                        style: TextStyle(
+                          fontSize: ResponsiveHelper.getTitleFontSize(context),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
               ),
-            ),
-          ),
-        ],
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isSmallScreen ? double.infinity : 300,
+                  ),
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      prefixIcon: Icon(Icons.search, color: Colors.grey),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      hintStyle: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -288,18 +323,46 @@ class InventoryControlScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (trailing != null) trailing,
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = ResponsiveHelper.isMobile(context);
+              
+              if (isMobile) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (trailing != null) ...[
+                      const SizedBox(height: 12),
+                      trailing,
+                    ],
+                  ],
+                );
+              } else {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (trailing != null) trailing,
+                  ],
+                );
+              }
+            },
           ),
           const SizedBox(height: 16),
           child,

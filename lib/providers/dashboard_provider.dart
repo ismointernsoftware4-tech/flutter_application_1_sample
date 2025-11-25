@@ -662,6 +662,15 @@ class DashboardProvider extends ChangeNotifier {
   bool get showAddItemSidebar => _showAddItemSidebar;
   bool get showAddLocationSidebar => _showAddLocationSidebar;
   bool get showAddVendorSidebar => _showAddVendorSidebar;
+  
+  // Sidebar visibility state
+  bool _sidebarVisible = true;
+  bool get sidebarVisible => _sidebarVisible;
+  
+  void toggleSidebar() {
+    _sidebarVisible = !_sidebarVisible;
+    notifyListeners();
+  }
   NewUserForm get newUserForm => _newUserForm;
   List<String> get rolesList => _rolesList;
   List<Vendor> get vendors => List.unmodifiable(_vendors);
@@ -1121,27 +1130,41 @@ class DashboardProvider extends ChangeNotifier {
     }
   }
 
+  // Load items from Firestore
+  Future<void> loadItems() async {
+    try {
+      final itemsData = await _firebaseService.fetchItems();
+      _itemMasterList = itemsData.map((data) {
+        return ItemMaster(
+          itemCode: data['itemCode'] ?? data['item_code'] ?? '',
+          itemName: data['itemName'] ?? data['item_name'] ?? '',
+          manufacturer: data['manufacturer'] ?? '',
+          type: data['itemType'] ?? data['type'] ?? '',
+          category: data['category'] ?? '',
+          unit: data['unitOfMeasure'] ?? data['unit'] ?? '',
+          storage: data['storageConditions'] ?? data['storage'] ?? '',
+          stock: (data['stock'] ?? data['quantity'] ?? 0) is int 
+              ? (data['stock'] ?? data['quantity'] ?? 0) 
+              : int.tryParse((data['stock'] ?? data['quantity'] ?? '0').toString()) ?? 0,
+          status: data['status'] ?? 'Active',
+        );
+      }).toList();
+      notifyListeners();
+      print('Items loaded successfully: ${_itemMasterList.length} items');
+    } catch (e) {
+      print('Error loading items: $e');
+      // Keep existing items if fetch fails
+    }
+  }
+
   // Save item to Firestore
   Future<void> saveItem(Map<String, dynamic> itemData) async {
     try {
       // Save to Firestore
       final docId = await _firebaseService.saveItem(itemData);
       
-      // Also add to local list for immediate UI update
-      final item = ItemMaster(
-        itemCode: itemData['itemCode'] ?? '',
-        itemName: itemData['itemName'] ?? '',
-        manufacturer: itemData['manufacturer'] ?? '',
-        type: itemData['itemType'] ?? '',
-        category: itemData['category'] ?? '',
-        unit: itemData['unitOfMeasure'] ?? '',
-        storage: itemData['storageConditions'] ?? '',
-        stock: itemData['stock'] ?? 0,
-        status: itemData['status'] ?? 'Active',
-      );
-      
-      _itemMasterList = [..._itemMasterList, item];
-      notifyListeners();
+      // Reload items from Firestore to get the latest data
+      await loadItems();
       
       print('Item saved successfully with ID: $docId');
     } catch (e) {

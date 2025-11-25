@@ -5,6 +5,7 @@ import '../models/dashboard_models.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/procurement_provider.dart';
 import '../widgets/vendor_card.dart';
+import '../utils/responsive_helper.dart';
 
 class ProcurementScreen extends StatelessWidget {
   const ProcurementScreen({super.key});
@@ -24,6 +25,8 @@ class _ProcurementView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dashboardProvider = context.watch<DashboardProvider>();
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
 
     return Container(
       color: Colors.grey[100],
@@ -32,14 +35,14 @@ class _ProcurementView extends StatelessWidget {
           _buildHeader(context),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: screenPadding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildTabs(context),
-                  const SizedBox(height: 20),
+                  SizedBox(height: isMobile ? 16 : 20),
                   _buildActionBar(context),
-                  const SizedBox(height: 24),
+                  SizedBox(height: isMobile ? 16 : 24),
                   _buildTabContent(context, dashboardProvider),
                 ],
               ),
@@ -51,38 +54,112 @@ class _ProcurementView extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+    final searchWidth = ResponsiveHelper.getSearchBarWidth(context);
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      decoration: const BoxDecoration(color: Colors.white),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Procurement',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(
-            width: 280,
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              ),
-            ),
-          ),
-        ],
+      padding: EdgeInsets.symmetric(
+        horizontal: screenPadding.horizontal,
+        vertical: isMobile ? 16 : 20,
       ),
+      decoration: const BoxDecoration(color: Colors.white),
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    // Menu icon for mobile/tablet
+                    IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      tooltip: 'Open menu',
+                    ),
+                    Expanded(
+                      child: Text(
+                        'Procurement',
+                        style: TextStyle(
+                          fontSize: ResponsiveHelper.getTitleFontSize(context),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          :               LayoutBuilder(
+                builder: (context, constraints) {
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final isSmallScreen = screenWidth < 700;
+                  
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          // Menu icon for tablet
+                          if (isTablet)
+                            IconButton(
+                              icon: const Icon(Icons.menu),
+                              onPressed: () => Scaffold.of(context).openDrawer(),
+                              tooltip: 'Open menu',
+                            ),
+                          if (!isSmallScreen)
+                            Text(
+                              'Procurement',
+                              style: TextStyle(
+                                fontSize: ResponsiveHelper.getTitleFontSize(context),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                        ],
+                      ),
+                      Flexible(
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth: isSmallScreen ? double.infinity : searchWidth,
+                          ),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Search...',
+                              prefixIcon: const Icon(Icons.search),
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
     );
   }
 
@@ -90,70 +167,142 @@ class _ProcurementView extends StatelessWidget {
     final procurementProvider = context.watch<ProcurementProvider>();
     final activeTab = procurementProvider.activeTab;
     final tabs = ['Purchase Requisitions', 'Purchase Orders', 'Vendors'];
-    return Row(
-      children: List.generate(tabs.length, (index) {
-        final isActive = activeTab == index;
-        return GestureDetector(
-          onTap: () => context.read<ProcurementProvider>().setActiveTab(index),
-          child: Padding(
-            padding: const EdgeInsets.only(right: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  tabs[index],
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: isActive ? Colors.blue.shade700 : Colors.grey[500],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                if (isActive)
-                  Container(
-                    height: 3,
-                    width: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade600,
-                      borderRadius: BorderRadius.circular(2),
+    final isMobile = ResponsiveHelper.isMobile(context);
+    
+    return isMobile
+        ? SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(tabs.length, (index) {
+                final isActive = activeTab == index;
+                return GestureDetector(
+                  onTap: () => context.read<ProcurementProvider>().setActiveTab(index),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isMobile && tabs[index].length > 15
+                              ? tabs[index].split(' ').first
+                              : tabs[index],
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isActive ? Colors.blue.shade700 : Colors.grey[500],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        if (isActive)
+                          Container(
+                            height: 3,
+                            width: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade600,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-              ],
+                );
+              }),
             ),
-          ),
-        );
-      }),
-    );
+          )
+        : Row(
+            children: List.generate(tabs.length, (index) {
+              final isActive = activeTab == index;
+              return GestureDetector(
+                onTap: () => context.read<ProcurementProvider>().setActiveTab(index),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        tabs[index],
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: isActive ? Colors.blue.shade700 : Colors.grey[500],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      if (isActive)
+                        Container(
+                          height: 3,
+                          width: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade600,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          );
   }
 
   Widget _buildActionBar(BuildContext context) {
     final buttonLabel =
         context.watch<ProcurementProvider>().primaryButtonLabel;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            _outlineButton(Icons.filter_list, 'Filter', () {}),
-            const SizedBox(width: 12),
-            _outlineButton(Icons.download, 'Export', () {}),
-          ],
-        ),
-        ElevatedButton.icon(
-          onPressed: () {},
-          icon: const Icon(Icons.add),
-          label: Text(buttonLabel),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      ],
-    );
+    final isMobile = ResponsiveHelper.isMobile(context);
+    
+    return isMobile
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _outlineButton(Icons.filter_list, 'Filter', () {}),
+                  _outlineButton(Icons.download, 'Export', () {}),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.add),
+                label: Text(buttonLabel),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  _outlineButton(Icons.filter_list, 'Filter', () {}),
+                  const SizedBox(width: 12),
+                  _outlineButton(Icons.download, 'Export', () {}),
+                ],
+              ),
+              ElevatedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.add),
+                label: Text(buttonLabel),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          );
   }
 
   Widget _buildTabContent(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/responsive_helper.dart';
 
 class StockAdjustmentScreen extends StatelessWidget {
   const StockAdjustmentScreen({super.key});
@@ -13,8 +14,8 @@ class StockAdjustmentScreen extends StatelessWidget {
             _header(context, 'Stock Adjustment'),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: _form(),
+                padding: ResponsiveHelper.getScreenPadding(context),
+                child: _form(context),
               ),
             ),
           ],
@@ -24,8 +25,14 @@ class StockAdjustmentScreen extends StatelessWidget {
   }
 
   Widget _header(BuildContext context, String title) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenPadding.horizontal,
+        vertical: isMobile ? 16 : 20,
+      ),
       decoration: const BoxDecoration(color: Colors.white),
       child: Row(
         children: [
@@ -33,12 +40,15 @@ class StockAdjustmentScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+          SizedBox(width: isMobile ? 8 : 12),
+          Flexible(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getTitleFontSize(context),
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -46,9 +56,9 @@ class StockAdjustmentScreen extends StatelessWidget {
     );
   }
 
-  Widget _form() {
+  Widget _form(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: ResponsiveHelper.getScreenPadding(context),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -136,33 +146,48 @@ class StockAdjustmentScreen extends StatelessWidget {
             hint: 'Explanation for adjustment...',
           ),
           const SizedBox(height: 20),
-          Row(
-            children: [
-              OutlinedButton(
-                onPressed: () {},
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  child: Text('Cancel'),
-                ),
-              ),
-              const SizedBox(width: 16),
-              ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.send),
-                label: const Text('Submit for Approval'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = ResponsiveHelper.isMobile(context);
+              
+              return Row(
+                children: [
+                  Flexible(
+                    child: OutlinedButton(
+                      onPressed: () {},
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 16 : 24,
+                          vertical: 14,
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  SizedBox(width: isMobile ? 8 : 16),
+                  Flexible(
+                    child: ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.send),
+                      label: Text(
+                        isMobile ? 'Submit' : 'Submit for Approval',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 20 : 32,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ],
       ),

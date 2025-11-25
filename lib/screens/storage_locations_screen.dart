@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/dashboard_models.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/add_location_sidebar.dart';
+import '../utils/responsive_helper.dart';
 
 class StorageLocationsScreen extends StatelessWidget {
   const StorageLocationsScreen({super.key});
@@ -19,16 +20,16 @@ class StorageLocationsScreen extends StatelessWidget {
           color: Colors.grey[100],
           child: Column(
             children: [
-              _header(),
+              _header(context),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  padding: ResponsiveHelper.getScreenPadding(context),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _titleBar(context),
-                      const SizedBox(height: 24),
-                      _table(locations),
+                      SizedBox(height: ResponsiveHelper.isMobile(context) ? 16 : 24),
+                      _table(context, locations),
                     ],
                   ),
                 ),
@@ -65,108 +66,246 @@ class StorageLocationsScreen extends StatelessWidget {
     );
   }
 
-  Widget _header() {
+  Widget _header(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+    final searchWidth = ResponsiveHelper.getSearchBarWidth(context);
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      decoration: const BoxDecoration(color: Colors.white),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Storage Locations',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(
-            width: 280,
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              ),
-            ),
-          ),
-        ],
+      padding: EdgeInsets.symmetric(
+        horizontal: screenPadding.horizontal,
+        vertical: isMobile ? 16 : 20,
       ),
+      decoration: const BoxDecoration(color: Colors.white),
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    // Menu icon for mobile/tablet
+                    IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      tooltip: 'Open menu',
+                    ),
+                    Expanded(
+                      child: Text(
+                        'Storage Locations',
+                        style: TextStyle(
+                          fontSize: ResponsiveHelper.getTitleFontSize(context),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          :               LayoutBuilder(
+                builder: (context, constraints) {
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final isSmallScreen = screenWidth < 700;
+                  
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          // Menu icon for tablet
+                          if (isTablet)
+                            IconButton(
+                              icon: const Icon(Icons.menu),
+                              onPressed: () => Scaffold.of(context).openDrawer(),
+                              tooltip: 'Open menu',
+                            ),
+                          if (!isSmallScreen)
+                            Text(
+                              'Storage Locations',
+                              style: TextStyle(
+                                fontSize: ResponsiveHelper.getTitleFontSize(context),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                        ],
+                      ),
+                      Flexible(
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth: isSmallScreen ? double.infinity : searchWidth,
+                          ),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Search...',
+                              prefixIcon: const Icon(Icons.search),
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
     );
   }
 
   Widget _titleBar(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Storage Locations',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Manage warehouses, rooms, racks, and bins.',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            _outlineButton(Icons.filter_list, 'Filter'),
-            const SizedBox(width: 12),
-            _outlineButton(Icons.download, 'Export'),
-            const SizedBox(width: 16),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.map_outlined),
-              label: const Text('View Map'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.blueGrey[800],
-                side: const BorderSide(color: Color(0xFFE5E7EB)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+    final isMobile = ResponsiveHelper.isMobile(context);
+    
+    return isMobile
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Storage Locations',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getTitleFontSize(context),
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            ElevatedButton.icon(
-              onPressed: () {
-                context.read<DashboardProvider>().openAddLocationSidebar();
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Add Location'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              const SizedBox(height: 6),
+              Text(
+                'Manage warehouses, rooms, racks, and bins.',
+                style: TextStyle(color: Colors.grey[600]),
               ),
-            ),
-          ],
-        ),
-      ],
-    );
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _outlineButton(Icons.filter_list, 'Filter'),
+                  _outlineButton(Icons.download, 'Export'),
+                  ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.map_outlined, size: 16),
+                    label: const Text('Map'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.blueGrey[800],
+                      side: const BorderSide(color: Color(0xFFE5E7EB)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.read<DashboardProvider>().openAddLocationSidebar();
+                    },
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Add'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Storage Locations',
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getTitleFontSize(context),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Manage warehouses, rooms, racks, and bins.',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  _outlineButton(Icons.filter_list, 'Filter'),
+                  const SizedBox(width: 12),
+                  _outlineButton(Icons.download, 'Export'),
+                  const SizedBox(width: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.map_outlined),
+                    label: const Text('View Map'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.blueGrey[800],
+                      side: const BorderSide(color: Color(0xFFE5E7EB)),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.read<DashboardProvider>().openAddLocationSidebar();
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Location'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
   }
 
-  Widget _table(List<StorageLocation> locations) {
+  Widget _table(BuildContext context, List<StorageLocation> locations) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    
+    if (isMobile) {
+      return _buildMobileCardView(locations);
+    }
+    
     final headers = [
       'ID',
       'Name',
@@ -339,6 +478,94 @@ class StorageLocationsScreen extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+
+  Widget _buildMobileCardView(List<StorageLocation> locations) {
+    return Column(
+      children: locations.map((location) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _linkText(location.id),
+                          const SizedBox(height: 4),
+                          Text(
+                            location.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _statusChip(location.status),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  children: [
+                    _buildMobileInfo('Type', _badge(location.type)),
+                    _buildMobileInfo('Parent', Text(location.parentLocation)),
+                    _buildMobileInfo('Capacity', Text('${location.capacity}%')),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.remove_red_eye_outlined, size: 18),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildMobileInfo(String label, Widget value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label: ',
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        DefaultTextStyle(
+          style: const TextStyle(fontSize: 12),
+          child: value,
+        ),
+      ],
     );
   }
 }

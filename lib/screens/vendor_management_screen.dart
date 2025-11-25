@@ -5,6 +5,7 @@ import '../models/dashboard_models.dart';
 import '../providers/dashboard_provider.dart';
 import '../widgets/vendor_card.dart';
 import '../widgets/add_vendor_sidebar.dart';
+import '../utils/responsive_helper.dart';
 
 class VendorManagementScreen extends StatefulWidget {
   const VendorManagementScreen({super.key});
@@ -26,23 +27,25 @@ class _VendorManagementScreenState extends State<VendorManagementScreen> {
       return vendor.status.toLowerCase() == _selectedFilter.toLowerCase();
     }).toList();
     final showSidebar = provider.showAddVendorSidebar;
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
 
     return Stack(
       children: [
         Container(
           color: Colors.grey[100],
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: screenPadding,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
-                const SizedBox(height: 24),
-                _buildFilters(),
-                const SizedBox(height: 24),
-                _buildActionBar(),
-                const SizedBox(height: 24),
-                _buildVendorGrid(vendors),
+                _buildHeader(context),
+                SizedBox(height: isMobile ? 16 : 24),
+                _buildFilters(context),
+                SizedBox(height: isMobile ? 16 : 24),
+                _buildActionBar(context),
+                SizedBox(height: isMobile ? 16 : 24),
+                _buildVendorGrid(context, vendors),
               ],
             ),
           ),
@@ -76,9 +79,14 @@ class _VendorManagementScreenState extends State<VendorManagementScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+    final searchWidth = ResponsiveHelper.getSearchBarWidth(context);
+    
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: screenPadding,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -86,43 +94,120 @@ class _VendorManagementScreenState extends State<VendorManagementScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Procurement',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              SizedBox(
-                width: 280,
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search...',
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
+          isMobile
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Menu icon for mobile/tablet
+                        IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                          tooltip: 'Open menu',
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Vendor Management',
+                            style: TextStyle(
+                              fontSize: ResponsiveHelper.getTitleFontSize(context),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                  ),
-                ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search...',
+                          prefixIcon: const Icon(Icons.search),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              :               LayoutBuilder(
+                builder: (context, constraints) {
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final isSmallScreen = screenWidth < 700;
+                  
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          // Menu icon for tablet
+                          if (isTablet)
+                            IconButton(
+                              icon: const Icon(Icons.menu),
+                              onPressed: () => Scaffold.of(context).openDrawer(),
+                              tooltip: 'Open menu',
+                            ),
+                          if (!isSmallScreen)
+                            Text(
+                              'Vendor Management',
+                              style: TextStyle(
+                                fontSize: ResponsiveHelper.getTitleFontSize(context),
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                        ],
+                      ),
+                      Flexible(
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth: isSmallScreen ? double.infinity : searchWidth,
+                          ),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Search...',
+                              prefixIcon: const Icon(Icons.search),
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              _buildTab('Purchase Requisitions', false),
-              _buildTab('Purchase Orders', false),
-              _buildTab('Vendors', true),
-            ],
-          ),
+          SizedBox(height: isMobile ? 16 : 24),
+          isMobile
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildTab('Purchase Requisitions', false),
+                      _buildTab('Purchase Orders', false),
+                      _buildTab('Vendors', true),
+                    ],
+                  ),
+                )
+              : Row(
+                  children: [
+                    _buildTab('Purchase Requisitions', false),
+                    _buildTab('Purchase Orders', false),
+                    _buildTab('Vendors', true),
+                  ],
+                ),
         ],
       ),
     );
@@ -142,66 +227,130 @@ class _VendorManagementScreenState extends State<VendorManagementScreen> {
     );
   }
 
-  Widget _buildFilters() {
-    return Row(
-      children: _filters.map((filter) {
-        final isActive = _selectedFilter == filter;
-        return Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: ChoiceChip(
-            label: Text(filter),
-            selected: isActive,
-            onSelected: (_) {
-              setState(() {
-                _selectedFilter = filter;
-              });
-            },
-            selectedColor: Colors.indigo.shade50,
-            labelStyle: TextStyle(
-              color: isActive ? Colors.indigo : Colors.grey[600],
-              fontWeight: FontWeight.w600,
+  Widget _buildFilters(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    
+    return isMobile
+        ? SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _filters.map((filter) {
+                final isActive = _selectedFilter == filter;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: ChoiceChip(
+                    label: Text(filter),
+                    selected: isActive,
+                    onSelected: (_) {
+                      setState(() {
+                        _selectedFilter = filter;
+                      });
+                    },
+                    selectedColor: Colors.indigo.shade50,
+                    labelStyle: TextStyle(
+                      color: isActive ? Colors.indigo : Colors.grey[600],
+                      fontWeight: FontWeight.w600,
+                    ),
+                    backgroundColor: Colors.white,
+                  ),
+                );
+              }).toList(),
             ),
-            backgroundColor: Colors.white,
-          ),
-        );
-      }).toList(),
-    );
+          )
+        : Row(
+            children: _filters.map((filter) {
+              final isActive = _selectedFilter == filter;
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: ChoiceChip(
+                  label: Text(filter),
+                  selected: isActive,
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedFilter = filter;
+                    });
+                  },
+                  selectedColor: Colors.indigo.shade50,
+                  labelStyle: TextStyle(
+                    color: isActive ? Colors.indigo : Colors.grey[600],
+                    fontWeight: FontWeight.w600,
+                  ),
+                  backgroundColor: Colors.white,
+                ),
+              );
+            }).toList(),
+          );
   }
 
-  Widget _buildActionBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            _outlineButton(Icons.filter_list, 'Filter', () {}),
-            const SizedBox(width: 12),
-            _outlineButton(Icons.download, 'Export', () {}),
-          ],
-        ),
-        ElevatedButton.icon(
-          onPressed: () {
-            context.read<DashboardProvider>().openAddVendorSidebar();
-          },
-          icon: const Icon(Icons.add),
-          label: const Text('Add New Vendor'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      ],
-    );
+  Widget _buildActionBar(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    
+    return isMobile
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _outlineButton(Icons.filter_list, 'Filter', () {}),
+                  _outlineButton(Icons.download, 'Export', () {}),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  context.read<DashboardProvider>().openAddVendorSidebar();
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Add New Vendor'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          )
+        : Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  _outlineButton(Icons.filter_list, 'Filter', () {}),
+                  const SizedBox(width: 12),
+                  _outlineButton(Icons.download, 'Export', () {}),
+                ],
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  context.read<DashboardProvider>().openAddVendorSidebar();
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Add New Vendor'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          );
   }
 
-  Widget _buildVendorGrid(List<Vendor> vendors) {
+  Widget _buildVendorGrid(BuildContext context, List<Vendor> vendors) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+    
     if (vendors.isEmpty) {
       return Container(
-        padding: const EdgeInsets.all(40),
+        padding: EdgeInsets.all(isMobile ? 24 : 40),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -218,12 +367,29 @@ class _VendorManagementScreenState extends State<VendorManagementScreen> {
       );
     }
 
+    if (isMobile) {
+      return Column(
+        children: vendors.map((vendor) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: VendorCard(vendor: vendor),
+          );
+        }).toList(),
+      );
+    }
+
+    final crossAxisCount = isTablet ? 2 : 3;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final padding = ResponsiveHelper.getScreenPadding(context);
+    final availableWidth = screenWidth - (padding.horizontal * 2);
+    final cardWidth = (availableWidth - (crossAxisCount - 1) * 20) / crossAxisCount;
+
     return Wrap(
       spacing: 20,
       runSpacing: 20,
       children: vendors.map((vendor) {
         return SizedBox(
-          width: 320,
+          width: cardWidth,
           child: VendorCard(vendor: vendor),
         );
       }).toList(),

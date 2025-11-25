@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/dashboard_models.dart';
 import '../providers/dashboard_provider.dart';
+import '../utils/responsive_helper.dart';
 
 class TraceabilityScreen extends StatelessWidget {
   const TraceabilityScreen({super.key});
@@ -15,10 +16,10 @@ class TraceabilityScreen extends StatelessWidget {
       color: Colors.grey[100],
       child: Column(
         children: [
-          _header(),
+          _header(context),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: ResponsiveHelper.getScreenPadding(context),
               child: Column(
                 children: [
                   _filters(),
@@ -33,38 +34,68 @@ class TraceabilityScreen extends StatelessWidget {
     );
   }
 
-  Widget _header() {
+  Widget _header(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+    final searchWidth = ResponsiveHelper.getSearchBarWidth(context);
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenPadding.horizontal,
+        vertical: isMobile ? 16 : 20,
+      ),
       decoration: const BoxDecoration(color: Colors.white),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Text(
-            'Transaction Traceability',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(
-            width: 280,
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final isSmallScreen = screenWidth < 700;
+          
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  if (isMobile || isTablet)
+                    IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      tooltip: 'Open menu',
+                    ),
+                  if (!isSmallScreen)
+                    Text(
+                      'Transaction Traceability',
+                      style: TextStyle(
+                        fontSize: ResponsiveHelper.getTitleFontSize(context),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                ],
               ),
-            ),
-          ),
-        ],
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isSmallScreen ? double.infinity : searchWidth,
+                  ),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -83,62 +114,135 @@ class TraceabilityScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                labelText: 'Search by Item, Reference, or Batch...',
-                labelStyle: TextStyle(color: Colors.grey[500]),
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey[50],
-                border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.circular(12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = ResponsiveHelper.isMobile(context);
+          
+          if (isMobile) {
+            // Stack vertically on mobile
+            return Column(
+              children: [
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Search by Item, Reference, or Batch...',
+                    labelStyle: TextStyle(color: Colors.grey[500]),
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 200,
-            child: InputDecorator(
-              decoration: InputDecoration(
-                labelText: 'All Types',
-                labelStyle: TextStyle(color: Colors.grey[800]),
-                filled: true,
-                fillColor: Colors.grey[50],
-                border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'All Types',
+                      labelStyle: TextStyle(color: Colors.grey[800]),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.swap_vert, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Text('Filter'),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              child: Row(
-                children: const [
-                  Icon(Icons.swap_vert, color: Colors.grey),
-                  SizedBox(width: 8),
-                  Text('Filter'),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.download),
-            label: const Text('Export Log'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.blueGrey[800],
-              side: const BorderSide(color: Color(0xFFE5E7EB)),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.download),
+                    label: const Text('Export Log'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.blueGrey[800],
+                      side: const BorderSide(color: Color(0xFFE5E7EB)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else {
+            // Original Row for desktop/tablet
+            return Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Search by Item, Reference, or Batch...',
+                      labelStyle: TextStyle(color: Colors.grey[500]),
+                      prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Flexible(
+                  child: SizedBox(
+                    width: 200,
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'All Types',
+                        labelStyle: TextStyle(color: Colors.grey[800]),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.swap_vert, color: Colors.grey),
+                          SizedBox(width: 8),
+                          Text('Filter'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Flexible(
+                  child: ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.download),
+                    label: const Text('Export Log'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.blueGrey[800],
+                      side: const BorderSide(color: Color(0xFFE5E7EB)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+        },
       ),
     );
   }
@@ -214,7 +318,12 @@ class TraceabilityScreen extends StatelessWidget {
                           color: Colors.grey[700],
                         ),
                         const SizedBox(width: 6),
-                        Text(record.type),
+                        Flexible(
+                          child: Text(
+                            record.type,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ),
