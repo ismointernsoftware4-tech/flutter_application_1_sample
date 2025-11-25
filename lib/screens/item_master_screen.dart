@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/dashboard_provider.dart';
-import '../widgets/add_item_sidebar.dart';
+import 'form_builder_screen.dart';
 import '../utils/responsive_helper.dart';
 
 class ItemMasterScreen extends StatefulWidget {
@@ -34,7 +34,6 @@ class _ItemMasterScreenState extends State<ItemMasterScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<DashboardProvider>(context);
     final items = provider.itemMasterList;
-    final showSidebar = provider.showAddItemSidebar;
     final isMobile = ResponsiveHelper.isMobile(context);
     final isTablet = ResponsiveHelper.isTablet(context);
     final screenPadding = ResponsiveHelper.getScreenPadding(context);
@@ -107,7 +106,12 @@ class _ItemMasterScreenState extends State<ItemMasterScreen> {
                               width: double.infinity,
                               child: ElevatedButton.icon(
                                 onPressed: () {
-                                  provider.openAddItemSidebar();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const FormBuilderScreen(),
+                                    ),
+                                  );
                                 },
                                 icon: const Icon(Icons.add, size: 18),
                                 label: const Text('Add New Item'),
@@ -188,7 +192,12 @@ class _ItemMasterScreenState extends State<ItemMasterScreen> {
                                 if (!isSmallScreen)
                                   ElevatedButton.icon(
                                     onPressed: () {
-                                      provider.openAddItemSidebar();
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const FormBuilderScreen(),
+                                        ),
+                                      );
                                     },
                                     icon: const Icon(Icons.add, size: 18),
                                     label: Text(
@@ -634,29 +643,6 @@ class _ItemMasterScreenState extends State<ItemMasterScreen> {
             ),
           ], // Close Column children
         ), // Close Column
-        // Sidebar overlay
-        if (showSidebar)
-          Positioned.fill(
-            child: Stack(
-              children: [
-                // Backdrop
-                GestureDetector(
-                  onTap: () => provider.closeAddItemSidebar(),
-                  child: Container(color: Colors.black.withOpacity(0.5)),
-                ),
-                // Sidebar
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: GestureDetector(
-                    onTap: () {}, // Prevent closing when clicking sidebar
-                    child: const AddItemSidebar(),
-                  ),
-                ),
-              ],
-            ),
-          ),
       ], // Close Stack children
     ); // Close Stack
   }

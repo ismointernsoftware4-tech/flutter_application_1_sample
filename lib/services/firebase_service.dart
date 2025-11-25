@@ -714,6 +714,44 @@ class FirebaseService {
       throw Exception('Error saving item at location: $e');
     }
   }
+
+  Future<Map<String, dynamic>?> fetchFormDefinition(String formId) async {
+    if (!isAvailable) return null;
+    try {
+      final baseDoc = _firestore!
+          .collection(_inventoryManagementCollection)
+          .doc('form_definitions');
+      await baseDoc.set({'type': 'forms'}, SetOptions(merge: true));
+      final doc = await baseDoc.collection('forms').doc(formId).get();
+      return doc.data();
+    } catch (e) {
+      print('Error fetching form definition: $e');
+      return null;
+    }
+  }
+
+  Future<void> saveFormDefinition(
+    String formId,
+    Map<String, dynamic> definition,
+  ) async {
+    if (!isAvailable) {
+      print('Firebase not available. Form definition not saved.');
+      return;
+    }
+    try {
+      final baseDoc = _firestore!
+          .collection(_inventoryManagementCollection)
+          .doc('form_definitions');
+      await baseDoc.set({'type': 'forms'}, SetOptions(merge: true));
+      await baseDoc.collection('forms').doc(formId).set({
+        ...definition,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error saving form definition: $e');
+      throw Exception('Error saving form definition: $e');
+    }
+  }
 }
 
 class RolePermissionsData {
