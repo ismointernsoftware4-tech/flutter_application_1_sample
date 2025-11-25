@@ -1,792 +1,546 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/dashboard_provider.dart';
-import '../widgets/add_item_sidebar.dart';
+
+import '../constants/item_column_keys.dart';
+import '../models/dashboard_models.dart';
+import '../providers/item_column_visibility_provider.dart';
+import '../providers/item_table_provider.dart';
 import '../utils/responsive_helper.dart';
 
-class ItemMasterScreen extends StatefulWidget {
+class ItemMasterScreen extends StatelessWidget {
   const ItemMasterScreen({super.key});
 
   @override
-  State<ItemMasterScreen> createState() => _ItemMasterScreenState();
+  Widget build(BuildContext context) {
+    final padding = ResponsiveHelper.getScreenPadding(context);
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final isTablet = ResponsiveHelper.isTablet(context);
+
+    return Container(
+      color: Colors.grey[100],
+      child: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1400),
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.all(padding.horizontal / 2),
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    if (isMobile || isTablet)
+                      IconButton(
+                        icon: const Icon(Icons.menu),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        tooltip: 'Open menu',
+                      ),
+                    Text(
+                      'Item Master',
+                      style: TextStyle(
+                        fontSize: ResponsiveHelper.getTitleFontSize(context),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    padding.horizontal,
+                    0,
+                    padding.horizontal,
+                    padding.vertical,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Consumer2<ItemTableProvider, ItemColumnVisibilityProvider>(
+                        builder: (context, tableProvider, columnProvider, _) {
+                          final visibleColumns = columnProvider.visibleColumns;
+                          final items = tableProvider.items;
+
+                          return LayoutBuilder(
+                            builder: (context, constraints) {
+                              final panelExpanded = columnProvider.panelExpanded;
+                              const collapsedWidth = 56.0;
+
+                              if (isMobile) {
+                                return Column(
+                                  children: [
+                                    Expanded(
+                                      child: _ItemTable(
+                                        items: items,
+                                        visibleColumns: visibleColumns,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    AnimatedSize(
+                                      duration: const Duration(milliseconds: 250),
+                                      curve: Curves.easeInOut,
+                                      child: _ColumnSelectorPanel(
+                                        columns: columnProvider.columns,
+                                        onToggle: columnProvider.toggleColumn,
+                                        onToggleHighlight:
+                                            columnProvider.toggleHighlight,
+                                        isHighlighted: columnProvider.isHighlighted,
+                                        expanded: panelExpanded,
+                                        onTogglePanel: columnProvider.togglePanelExpanded,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+
+                              final panelWidth = isTablet ? 240.0 : 260.0;
+
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: _ItemTable(
+                                      items: items,
+                                      visibleColumns: visibleColumns,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  AnimatedContainer(
+                                    width: panelExpanded ? panelWidth : collapsedWidth,
+                                    height: constraints.maxHeight,
+                                    duration: const Duration(milliseconds: 280),
+                                    curve: Curves.easeInOut,
+                                    child: _ColumnSelectorPanel(
+                                      columns: columnProvider.columns,
+                                      onToggle: columnProvider.toggleColumn,
+                                      onToggleHighlight: columnProvider.toggleHighlight,
+                                      isHighlighted: columnProvider.isHighlighted,
+                                      expanded: panelExpanded,
+                                      onTogglePanel: columnProvider.togglePanelExpanded,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-class _ItemMasterScreenState extends State<ItemMasterScreen> {
-  bool _isLoading = true;
+class _ItemTable extends StatelessWidget {
+  final List<ItemMaster> items;
+  final List<ColumnConfig> visibleColumns;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadItems();
-  }
-
-  Future<void> _loadItems() async {
-    final provider = Provider.of<DashboardProvider>(context, listen: false);
-    await provider.loadItems();
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
+  const _ItemTable({
+    required this.items,
+    required this.visibleColumns,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<DashboardProvider>(context);
-    final items = provider.itemMasterList;
-    final showSidebar = provider.showAddItemSidebar;
-    final isMobile = ResponsiveHelper.isMobile(context);
-    final isTablet = ResponsiveHelper.isTablet(context);
-    final screenPadding = ResponsiveHelper.getScreenPadding(context);
-
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+    if (visibleColumns.isEmpty) {
+      return const Center(
+        child: Text(
+          'No columns available. Add at least one heading to render the table.',
+          textAlign: TextAlign.center,
+        ),
+      );
     }
 
-    return Stack(
-      children: [
-        Column(
+    if (items.isEmpty) {
+      return const Center(
+        child: Text('No rows defined.'),
+      );
+    }
+
+    final headers = [...visibleColumns.map((c) => c.label), 'Actions'];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        constraints: BoxConstraints(
+          minWidth: (visibleColumns.length + 1) * 150,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
           children: [
-            // Top Header with Search and Add New Item button
             Container(
-              padding: EdgeInsets.all(screenPadding.horizontal / 2),
-              color: Colors.white,
-              child: Column(
-                children: [
-                  // Search bar and Add button row
-                  isMobile
-                      ? Column(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+              ),
+              child: Row(
+                children: headers
+                    .map(
+                      (header) => SizedBox(
+                        width: 150,
+                        child: Text(
+                          header,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+            const Divider(height: 1),
+            ...items.map(
+              (item) => Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    ...visibleColumns.map(
+                      (column) => SizedBox(
+                        width: 150,
+                        child: _buildCell(item, column),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 150,
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(Icons.remove_red_eye_outlined),
+                            tooltip: 'View',
+                          ),
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(Icons.edit_outlined),
+                            tooltip: 'Edit',
+                          ),
+                          IconButton(
+                            onPressed: () {},
+                            icon: const Icon(Icons.delete_outline),
+                            tooltip: 'Delete',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCell(ItemMaster item, ColumnConfig column) {
+    final value = _resolveValue(item, column.key);
+    
+    return Text(
+      value.isEmpty ? '-' : value,
+      style: const TextStyle(
+        fontSize: 14,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  String _resolveValue(ItemMaster item, String key) {
+    switch (key) {
+      case ItemColumnKeys.itemCode:
+        return item.itemCode;
+      case ItemColumnKeys.itemName:
+        return item.itemName;
+      case ItemColumnKeys.type:
+        return item.type;
+      case ItemColumnKeys.category:
+        return item.category;
+      case ItemColumnKeys.manufacturer:
+        return item.manufacturer;
+      case ItemColumnKeys.unit:
+        return item.unit;
+      case ItemColumnKeys.storage:
+        return item.storage;
+      case ItemColumnKeys.stock:
+        return item.stock.toString();
+      case ItemColumnKeys.status:
+        return item.status;
+      default:
+        return '';
+    }
+  }
+}
+
+class _ColumnSelectorPanel extends StatelessWidget {
+  final List<ColumnConfig> columns;
+  final void Function(String key, bool value) onToggle;
+  final void Function(String key)? onToggleHighlight;
+  final bool Function(String key)? isHighlighted;
+  final bool expanded;
+  final VoidCallback? onTogglePanel;
+
+  static const Map<String, IconData> _columnIcons = {
+    ItemColumnKeys.itemCode: Icons.qr_code_2,
+    ItemColumnKeys.itemName: Icons.label_important,
+    ItemColumnKeys.type: Icons.category,
+    ItemColumnKeys.category: Icons.widgets_outlined,
+    ItemColumnKeys.manufacturer: Icons.precision_manufacturing,
+    ItemColumnKeys.unit: Icons.straighten,
+    ItemColumnKeys.storage: Icons.inventory_2,
+    ItemColumnKeys.stock: Icons.storage,
+    ItemColumnKeys.status: Icons.verified_outlined,
+  };
+
+  const _ColumnSelectorPanel({
+    required this.columns,
+    required this.onToggle,
+    this.onToggleHighlight,
+    this.isHighlighted,
+    this.expanded = true,
+    this.onTogglePanel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF14213D),
+              Color(0xFF1F3B68),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: AnimatedOpacity(
+                opacity: expanded ? 1 : 0,
+                duration: const Duration(milliseconds: 200),
+                child: IgnorePointer(
+                  ignoring: !expanded,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                        child: Row(
                           children: [
-                            Row(
-                              children: [
-                                // Menu icon - always visible
-                                IconButton(
-                                  icon: const Icon(Icons.menu),
-                                  onPressed: () {
-                                    if (isMobile || isTablet) {
-                                      Scaffold.of(context).openDrawer();
-                                    } else {
-                                      Provider.of<DashboardProvider>(
-                                        context,
-                                        listen: false,
-                                      ).toggleSidebar();
-                                    }
-                                  },
-                                  tooltip: 'Toggle menu',
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.view_week, color: Colors.white),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: const [
+                                Text(
+                                  'Item Master',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                                Expanded(
-                                  child: Container(
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const TextField(
-                                      decoration: InputDecoration(
-                                        hintText: 'Search...',
-                                        prefixIcon: Icon(
-                                          Icons.search,
-                                          color: Colors.grey,
-                                        ),
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                        hintStyle: TextStyle(
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Toggle table columns',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ],
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  provider.openAddItemSidebar();
-                                },
-                                icon: const Icon(Icons.add, size: 18),
-                                label: const Text('Add New Item'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
                             ),
                           ],
-                        )
-                      : LayoutBuilder(
-                          builder: (context, constraints) {
-                            final screenWidth = MediaQuery.of(
-                              context,
-                            ).size.width;
-                            final isSmallScreen = screenWidth < 700;
-
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                // Menu icon - always visible
-                                IconButton(
-                                  icon: const Icon(Icons.menu),
-                                  onPressed: () {
-                                    if (isMobile || isTablet) {
-                                      Scaffold.of(context).openDrawer();
-                                    } else {
-                                      Provider.of<DashboardProvider>(
-                                        context,
-                                        listen: false,
-                                      ).toggleSidebar();
-                                    }
-                                  },
-                                  tooltip: 'Toggle menu',
+                        ),
+                      ),
+                      const Divider(color: Colors.white24, height: 1),
+                      Expanded(
+                        child: ListView.separated(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          itemCount: columns.length,
+                          separatorBuilder: (_, __) =>
+                              const Divider(color: Colors.white10, height: 1),
+                          itemBuilder: (context, index) {
+                            final column = columns[index];
+                            final highlighted = isHighlighted?.call(column.key) ?? false;
+                            final icon = _columnIcons[column.key] ?? Icons.view_list_rounded;
+                            return InkWell(
+                              onTap: () => onToggleHighlight?.call(column.key),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: highlighted
+                                      ? Colors.white.withOpacity(0.12)
+                                      : (column.visible
+                                          ? Colors.white.withOpacity(0.06)
+                                          : Colors.transparent),
+                                  border: highlighted
+                                      ? Border.all(color: const Color(0xFF38BDF8), width: 1)
+                                      : null,
                                 ),
-                                Flexible(
-                                  child: Container(
-                                    constraints: BoxConstraints(
-                                      maxWidth: isSmallScreen
-                                          ? double.infinity
-                                          : 400,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: highlighted
+                                            ? Colors.white.withOpacity(0.3)
+                                            : (column.visible
+                                                ? Colors.white.withOpacity(0.2)
+                                                : Colors.white.withOpacity(0.08)),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(icon, color: Colors.white),
                                     ),
-                                    height: 40,
-                                    margin: EdgeInsets.only(
-                                      right: isMobile ? 0 : 12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const TextField(
-                                      decoration: InputDecoration(
-                                        hintText: 'Search...',
-                                        prefixIcon: Icon(
-                                          Icons.search,
-                                          color: Colors.grey,
-                                        ),
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                        hintStyle: TextStyle(
-                                          color: Colors.grey,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        column.label,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                          fontWeight:
+                                              highlighted ? FontWeight.w600 : FontWeight.w500,
                                         ),
                                       ),
                                     ),
-                                  ),
+                                    Theme(
+                                      data: Theme.of(context).copyWith(
+                                        checkboxTheme: CheckboxThemeData(
+                                          side: const BorderSide(color: Colors.white54, width: 1.5),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          fillColor: WidgetStateProperty.resolveWith((states) {
+                                            if (states.contains(WidgetState.selected)) {
+                                              return const Color(0xFF38BDF8);
+                                            }
+                                            return Colors.transparent;
+                                          }),
+                                          checkColor: WidgetStateProperty.all(Colors.white),
+                                        ),
+                                      ),
+                                      child: Checkbox(
+                                        value: column.visible,
+                                        onChanged: (value) =>
+                                            onToggle(column.key, value ?? column.visible),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                if (!isSmallScreen)
-                                  ElevatedButton.icon(
-                                    onPressed: () {
-                                      provider.openAddItemSidebar();
-                                    },
-                                    icon: const Icon(Icons.add, size: 18),
-                                    label: Text(
-                                      isMobile ? 'Add' : 'Add New Item',
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue,
-                                      foregroundColor: Colors.white,
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: isMobile ? 16 : 20,
-                                        vertical: 12,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                  ),
-                              ],
+                              ),
                             );
                           },
                         ),
-                ],
-              ),
-            ),
-            // Main Content Card
-            Expanded(
-              child: Container(
-                margin: screenPadding,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Section Header with Title and Buttons
-                    Padding(
-                      padding: EdgeInsets.all(isMobile ? 12 : 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Item Master',
-                            style: TextStyle(
-                              fontSize: ResponsiveHelper.getTitleFontSize(
-                                context,
-                              ),
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: isMobile ? 12 : 16),
-                          isMobile
-                              ? Column(
-                                  children: [
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton.icon(
-                                        onPressed: () {
-                                          // Filter functionality
-                                        },
-                                        icon: const Icon(
-                                          Icons.filter_alt,
-                                          size: 18,
-                                        ),
-                                        label: const Text('Filter'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.grey[200],
-                                          foregroundColor: Colors.black87,
-                                          elevation: 0,
-                                          side: BorderSide(
-                                            color: Colors.grey[300]!,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 12,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton.icon(
-                                        onPressed: () {
-                                          // Export functionality
-                                        },
-                                        icon: const Icon(
-                                          Icons.download,
-                                          size: 18,
-                                        ),
-                                        label: const Text('Export'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.grey[200],
-                                          foregroundColor: Colors.black87,
-                                          elevation: 0,
-                                          side: BorderSide(
-                                            color: Colors.grey[300]!,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 12,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    ElevatedButton.icon(
-                                      onPressed: () {
-                                        // Filter functionality
-                                      },
-                                      icon: const Icon(
-                                        Icons.filter_alt,
-                                        size: 18,
-                                      ),
-                                      label: const Text('Filter'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.grey[200],
-                                        foregroundColor: Colors.black87,
-                                        elevation: 0,
-                                        side: BorderSide(
-                                          color: Colors.grey[300]!,
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    ElevatedButton.icon(
-                                      onPressed: () {
-                                        // Export functionality
-                                      },
-                                      icon: const Icon(
-                                        Icons.download,
-                                        size: 18,
-                                      ),
-                                      label: const Text('Export'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.grey[200],
-                                        foregroundColor: Colors.black87,
-                                        elevation: 0,
-                                        side: BorderSide(
-                                          color: Colors.grey[300]!,
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ],
                       ),
-                    ),
-                    const Divider(height: 1, color: Colors.grey),
-                    // Data Table or Card View based on screen size
-                    Expanded(
-                      child: isMobile
-                          ? _buildMobileCardView(items)
-                          : SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: SingleChildScrollView(
-                                child: DataTable(
-                                  headingRowColor: MaterialStateProperty.all(
-                                    Colors.grey[50],
-                                  ),
-                                  columnSpacing: isTablet ? 20 : 40,
-                                  columns: [
-                                    DataColumn(
-                                      label: Text(
-                                        'Item Code',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: isMobile ? 12 : 14,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        'Item Name',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: isMobile ? 12 : 14,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ),
-                                    if (!isTablet) ...[
-                                      DataColumn(
-                                        label: Text(
-                                          'Type',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: isMobile ? 12 : 14,
-                                            color: Colors.black87,
-                                          ),
-                                        ),
-                                      ),
-                                      DataColumn(
-                                        label: Text(
-                                          'Category',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: isMobile ? 12 : 14,
-                                            color: Colors.black87,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    DataColumn(
-                                      label: Text(
-                                        'Unit',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: isMobile ? 12 : 14,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        'Stock',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: isMobile ? 12 : 14,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        'Status',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: isMobile ? 12 : 14,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        'Actions',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: isMobile ? 12 : 14,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                  rows: items.map((item) {
-                                    final index = items.indexOf(item);
-                                    return DataRow(
-                                      color: MaterialStateProperty.all(
-                                        index % 2 == 0
-                                            ? Colors.white
-                                            : Colors.grey[50],
-                                      ),
-                                      cells: [
-                                        // Item Code
-                                        DataCell(
-                                          Text(
-                                            item.itemCode,
-                                            style: const TextStyle(
-                                              color: Colors.blue,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                        // Item Name with Manufacturer
-                                        DataCell(
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                item.itemName,
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Colors.black87,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                item.manufacturer,
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey[600],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        // Type (hidden on tablet)
-                                        if (!isTablet) ...[
-                                          DataCell(
-                                            Text(
-                                              item.type,
-                                              style: TextStyle(
-                                                color: Colors.black87,
-                                                fontSize: isMobile ? 12 : 14,
-                                              ),
-                                            ),
-                                          ),
-                                          // Category
-                                          DataCell(
-                                            Text(
-                                              item.category,
-                                              style: TextStyle(
-                                                color: Colors.black87,
-                                                fontSize: isMobile ? 12 : 14,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                        // Unit
-                                        DataCell(
-                                          Text(
-                                            item.unit,
-                                            style: TextStyle(
-                                              color: Colors.black87,
-                                              fontSize: isMobile ? 12 : 14,
-                                            ),
-                                          ),
-                                        ),
-                                        // Stock
-                                        DataCell(
-                                          Text(
-                                            item.stock.toString(),
-                                            style: TextStyle(
-                                              color: Colors.black87,
-                                              fontSize: isMobile ? 12 : 14,
-                                            ),
-                                          ),
-                                        ),
-                                        // Status
-                                        DataCell(
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: item.status == 'Active'
-                                                  ? Colors.green
-                                                  : Colors.orange,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: Text(
-                                              item.status,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        // Actions
-                                        DataCell(
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons.edit,
-                                                  size: 18,
-                                                ),
-                                                color: Colors.blue,
-                                                onPressed: () {
-                                                  // Edit functionality
-                                                },
-                                                padding: EdgeInsets.zero,
-                                                constraints:
-                                                    const BoxConstraints(),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              IconButton(
-                                                icon: const Icon(
-                                                  Icons.delete,
-                                                  size: 18,
-                                                ),
-                                                color: Colors.red,
-                                                onPressed: () {
-                                                  // Delete functionality
-                                                },
-                                                padding: EdgeInsets.zero,
-                                                constraints:
-                                                    const BoxConstraints(),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ], // Close Column children
-        ), // Close Column
-        // Sidebar overlay
-        if (showSidebar)
-          Positioned.fill(
-            child: Stack(
-              children: [
-                // Backdrop
-                GestureDetector(
-                  onTap: () => provider.closeAddItemSidebar(),
-                  child: Container(color: Colors.black.withOpacity(0.5)),
-                ),
-                // Sidebar
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: GestureDetector(
-                    onTap: () {}, // Prevent closing when clicking sidebar
-                    child: const AddItemSidebar(),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-      ], // Close Stack children
-    ); // Close Stack
-  }
-
-  // Mobile card view
-  Widget _buildMobileCardView(List items) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.itemCode,
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item.itemName,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            item.manufacturer,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: item.status == 'Active'
-                            ? Colors.green
-                            : Colors.orange,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        item.status,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: _PanelToggleButton(
+                  expanded: expanded,
+                  onPressed: onTogglePanel,
                 ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 8,
-                  children: [
-                    _buildMobileInfoRow('Type', item.type),
-                    _buildMobileInfoRow('Category', item.category),
-                    _buildMobileInfoRow('Unit', item.unit),
-                    _buildMobileInfoRow('Stock', item.stock.toString()),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 18),
-                      color: Colors.blue,
-                      onPressed: () {},
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.delete, size: 18),
-                      color: Colors.red,
-                      onPressed: () {},
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildMobileInfoRow(String label, String value) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '$label: ',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
-          ),
+          ],
         ),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-        ),
-      ],
+      ),
     );
   }
 }
+
+class _PanelToggleButton extends StatelessWidget {
+  final bool expanded;
+  final VoidCallback? onPressed;
+
+  const _PanelToggleButton({
+    required this.expanded,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withOpacity(0.12),
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Icon(
+            expanded ? Icons.chevron_right : Icons.chevron_left,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+      ),
+    );
+  }
+}
+

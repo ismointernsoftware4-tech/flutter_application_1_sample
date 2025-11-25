@@ -5,6 +5,7 @@ import '../models/dashboard_models.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/procurement_provider.dart';
 import '../widgets/vendor_card.dart';
+import '../widgets/create_purchase_requisition_screen.dart';
 import '../utils/responsive_helper.dart';
 
 class ProcurementScreen extends StatelessWidget {
@@ -24,9 +25,8 @@ class _ProcurementView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dashboardProvider = context.watch<DashboardProvider>();
-    final isMobile = ResponsiveHelper.isMobile(context);
-    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+    final procurementProvider = context.watch<ProcurementProvider>();
+    final showForm = procurementProvider.showCreateForm;
 
     return Container(
       color: Colors.grey[100],
@@ -34,20 +34,34 @@ class _ProcurementView extends StatelessWidget {
         children: [
           _buildHeader(context),
           Expanded(
-            child: SingleChildScrollView(
-              padding: screenPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTabs(context),
-                  SizedBox(height: isMobile ? 16 : 20),
-                  _buildActionBar(context),
-                  SizedBox(height: isMobile ? 16 : 24),
-                  _buildTabContent(context, dashboardProvider),
-                ],
-              ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: showForm
+                  ? const CreatePurchaseRequisitionScreen(key: ValueKey('create-pr-form'))
+                  : _mainContent(context),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _mainContent(BuildContext context) {
+    final dashboardProvider = context.watch<DashboardProvider>();
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final screenPadding = ResponsiveHelper.getScreenPadding(context);
+
+    return SingleChildScrollView(
+      key: const ValueKey('procurement-main'),
+      padding: screenPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTabs(context),
+          SizedBox(height: isMobile ? 16 : 20),
+          _buildActionBar(context),
+          SizedBox(height: isMobile ? 16 : 24),
+          _buildTabContent(context, dashboardProvider),
         ],
       ),
     );
@@ -264,7 +278,9 @@ class _ProcurementView extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  context.read<ProcurementProvider>().openCreateForm();
+                },
                 icon: const Icon(Icons.add),
                 label: Text(buttonLabel),
                 style: ElevatedButton.styleFrom(
@@ -289,7 +305,9 @@ class _ProcurementView extends StatelessWidget {
                 ],
               ),
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  context.read<ProcurementProvider>().openCreateForm();
+                },
                 icon: const Icon(Icons.add),
                 label: Text(buttonLabel),
                 style: ElevatedButton.styleFrom(
