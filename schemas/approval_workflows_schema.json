@@ -1,0 +1,61 @@
+{
+  "formName": "Approval Workflows",
+  "isActive": true,
+  "tableColumns": [
+    "id",
+    "date",
+    "type",
+    "description",
+    "requestedBy",
+    "priority",
+    "actions"
+  ],
+  "sampleData": [
+    {
+      "id": "AP-001",
+      "date": "2023-10-25",
+      "type": "Purchase Requisition",
+      "description": "Surgical Gloves for IVF Lab",
+      "requestedBy": "Dr. Sarah Smith",
+      "priority": "High",
+      "actions": ["Approve", "Reject"]
+    },
+    {
+      "id": "AP-002",
+      "date": "2023-10-29",
+      "type": "Vendor Registration",
+      "description": "New Vendor: SafeHands Inc",
+      "requestedBy": "Procurement Officer",
+      "priority": "Urgent",
+      "actions": ["Approve", "Reject"]
+    },
+    {
+      "id": "AP-003",
+      "date": "2023-11-15",
+      "type": "Stock Adjustment",
+      "description": "Expiry Write-off: Insulin",
+      "requestedBy": "Store Keeper",
+      "priority": "Urgent",
+      "actions": ["Approve", "Reject"]
+    },
+    {
+      "id": "AP-004",
+      "date": "2023-11-20",
+      "type": "Purchase Requisition",
+      "description": "Medical Equipment for Operation Theater",
+      "requestedBy": "Dr. John Doe",
+      "priority": "High",
+      "actions": ["Approve", "Reject"]
+    },
+    {
+      "id": "AP-005",
+      "date": "2023-11-22",
+      "type": "Vendor Registration",
+      "description": "New Vendor: MedSupply Co",
+      "requestedBy": "Procurement Officer",
+      "priority": "Normal",
+      "actions": ["Approve", "Reject"]
+    }
+  ]
+}
+

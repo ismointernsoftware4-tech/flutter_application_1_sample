@@ -1,0 +1,135 @@
+{
+  "formFields": [
+    {
+      "fieldKey": "requestedBy",
+      "fieldLabel": "Requested By",
+      "fieldType": "text",
+      "defaultValue": "Current User",
+      "isRequired": true,
+      "isShowInTable": false,
+      "order": 1
+    },
+    {
+      "fieldKey": "department",
+      "fieldLabel": "Department",
+      "fieldType": "dropdown",
+      "options": ["IVF Lab", "Admin", "Stores"],
+      "defaultValue": "IVF Lab",
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 2
+    },
+    {
+      "fieldKey": "priority",
+      "fieldLabel": "Priority",
+      "fieldType": "dropdown",
+      "options": ["Routine", "Urgent", "Critical"],
+      "defaultValue": "Routine",
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 3
+    },
+    {
+      "fieldKey": "requiredDate",
+      "fieldLabel": "Required Date",
+      "fieldType": "date",
+      "defaultValue": "",
+      "isRequired": true,
+      "isShowInTable": false,
+      "order": 4
+    },
+    {
+      "fieldKey": "notes",
+      "fieldLabel": "Notes",
+      "fieldType": "textarea",
+      "defaultValue": "",
+      "isRequired": false,
+      "isShowInTable": false,
+      "order": 5
+    }
+  ],
+  "itemsRequired": {
+    "columns": [
+      {
+        "fieldKey": "itemId",
+        "fieldLabel": "Item ID",
+        "fieldType": "text",
+        "defaultValue": "",
+        "isRequired": true,
+        "isShowInTable": true,
+        "order": 1
+      },
+      {
+        "fieldKey": "itemName",
+        "fieldLabel": "Item Name",
+        "fieldType": "dropdown",
+        "options": ["Paracetamol 500mg", "Insulin Glargine", "Surgical Gloves"],
+        "defaultValue": "",
+        "isRequired": true,
+        "isShowInTable": true,
+        "order": 2
+      },
+      {
+        "fieldKey": "qtyReq",
+        "fieldLabel": "Quantity Required",
+        "fieldType": "number",
+        "defaultValue": 1,
+        "isRequired": true,
+        "isShowInTable": true,
+        "order": 3
+      },
+      {
+        "fieldKey": "unit",
+        "fieldLabel": "Unit",
+        "fieldType": "dropdown",
+        "options": ["PCS", "BOX", "PKT", "BOTTLE"],
+        "defaultValue": "PCS",
+        "isRequired": true,
+        "isShowInTable": true,
+        "order": 4
+      }
+    ]
+  },
+  "tableColumns": [
+    "prId",
+    "requestedBy",
+    "department",
+    "date",
+    "priority",
+    "status",
+    "actions"
+  ],
+  "sampleData": [
+    {
+      "prId": "PR-2023-001",
+      "requestedBy": "Dr. Sarah Smith",
+      "department": "IVF Lab",
+      "date": "2023-10-25",
+      "priority": {
+        "label": "Routine",
+        "color": "blue"
+      },
+      "status": {
+        "label": "Pending Approval",
+        "color": "yellow"
+      },
+      "actions": ["view"]
+    },
+    {
+      "prId": "PR-2023-002",
+      "requestedBy": "John Doe",
+      "department": "Pharmacy",
+      "date": "2023-10-26",
+      "priority": {
+        "label": "Urgent",
+        "color": "red"
+      },
+      "status": {
+        "label": "Approved",
+        "color": "green"
+      },
+      "actions": ["view"]
+    }
+  ]
+}
+

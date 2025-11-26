@@ -1,0 +1,742 @@
+THIS  FOR  ITEM MASTER FORM FEILDS[
+    {
+      "fieldKey": "name",
+      "fieldLabel": "Item Name",
+      "fieldType": "text",
+      "defaultValue": "",
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 1
+    },
+    {
+      "fieldKey": "category",
+      "fieldLabel": "Category",
+      "fieldType": "dropdown",
+      "defaultValue": "",
+      "options": ["Packaging", "Consumable", "Raw Material"],
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 2
+    },
+    {
+      "fieldKey": "uom",
+      "fieldLabel": "UOM",
+      "fieldType": "dropdown",
+      "defaultValue": "",
+      "options": ["PCS", "ROLL", "KG"],
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 3
+    },
+    {
+      "fieldKey": "reorderLevel",
+      "fieldLabel": "Reorder Level",
+      "fieldType": "number",
+      "defaultValue": 0,
+      "isRequired": false,
+      "isShowInTable": false,
+      "order": 4
+    },
+    {
+      "fieldKey": "brand",
+      "fieldLabel": "Brand",
+      "fieldType": "text",
+      "defaultValue": "",
+      "isRequired": false,
+      "isShowInTable": true,
+      "order": 5
+    }
+  ]
+  
+  ITEM MASTE SAMPOLE  TABLKE  DATA
+  [
+    {
+      "itemCode": "ITM001",
+      "itemName": "Paracetamol 500mg",
+      "manufacturer": "PharmaCorp",
+      "type": "Drug",
+      "category": "Analgesic",
+      "unit": "Tablet",
+      "storage": "RT",
+      "stock": 5000,
+      "status": "Active"
+    },
+    {
+      "itemCode": "ITM002",
+      "itemName": "Insulin Glargine",
+      "manufacturer": "BioMed",
+      "type": "Drug",
+      "category": "Antidiabetic",
+      "unit": "Vial",
+      "storage": "2-8°C",
+      "stock": 120,
+      "status": "Active"
+    }
+  ]
+FORM FEILD  FOR PR
+"fields": [
+    {
+      "fieldKey": "requestedBy",
+      "fieldLabel": "Requested By",
+      "fieldType": "text",
+      "defaultValue": "Current User",
+      "isRequired": true,
+      "isShowInTable": false,
+      "order": 1
+    },
+    {
+      "fieldKey": "department",
+      "fieldLabel": "Department",
+      "fieldType": "dropdown",
+      "options": ["IVF Lab", "Admin", "Stores"],
+      "defaultValue": "IVF Lab",
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 2
+    },
+    {
+      "fieldKey": "priority",
+      "fieldLabel": "Priority",
+      "fieldType": "dropdown",
+      "options": ["Routine", "Urgent", "Critical"],
+      "defaultValue": "Routine",
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 3
+    },
+    {
+      "fieldKey": "requiredDate",
+      "fieldLabel": "Required Date",
+      "fieldType": "date",
+      "defaultValue": "",
+      "isRequired": true,
+      "isShowInTable": false,
+      "order": 4
+    },
+    {
+      "fieldKey": "notes",
+      "fieldLabel": "Notes",
+      "fieldType": "textarea",
+      "defaultValue": "",
+      "isRequired": false,
+      "isShowInTable": false,
+      "order": 5
+    }
+  ],
+
+  "itemsRequired": {
+    "columns": [
+      {
+        "fieldKey": "itemId",
+        "fieldLabel": "Item ID",
+        "fieldType": "text",
+        "defaultValue": "",
+        "isRequired": true,
+        "isShowInTable": true,
+        "order": 1
+      },
+      {
+        "fieldKey": "itemName",
+        "fieldLabel": "Item Name",
+        "fieldType": "dropdown",
+        "options": ["Paracetamol 500mg", "Insulin Glargine", "Surgical Gloves"],
+        "defaultValue": "",
+        "isRequired": true,
+        "isShowInTable": true,
+        "order": 2
+      },
+      {
+        "fieldKey": "qtyReq",
+        "fieldLabel": "Quantity Required",
+        "fieldType": "number",
+        "defaultValue": 1,
+        "isRequired": true,
+        "isShowInTable": true,
+        "order": 3
+      },
+      {
+        "fieldKey": "unit",
+        "fieldLabel": "Unit",
+        "fieldType": "dropdown",
+        "options": ["PCS", "BOX", "PKT", "BOTTLE"],
+        "defaultValue": "PCS",
+        "isRequired": true,
+        "isShowInTable": true,
+        "order": 4
+      }
+    ]
+    PR TAVBLE  VALUE
+    [
+        {
+          "prId": "PR-2023-001",
+          "requestedBy": "Dr. Sarah Smith",
+          "department": "IVF Lab",
+          "date": "2023-10-25",
+          "priority": {
+            "label": "Routine",
+            "color": "blue"
+          },
+          "status": {
+            "label": "Pending Approval",
+            "color": "yellow"
+          },
+          "actions": ["view"]
+        },
+        {
+          "prId": "PR-2023-002",
+          "requestedBy": "John Doe",
+          "department": "Pharmacy",
+          "date": "2023-10-26",
+          "priority": {
+            "label": "Urgent",
+            "color": "red"
+          },
+          "status": {
+            "label": "Approved",
+            "color": "green"
+          },
+          "actions": ["view"]
+        }
+      ]
+    PURCHASE REQUISITION TABLE DATA
+    [
+        {
+          "prId": "PR-2023-001",
+          "requestedBy": "Dr. Sarah Smith",
+          "department": "IVF Lab",
+          "date": "2023-10-25",
+          "priority": {
+            "label": "Routine",
+            "color": "blue"
+          },
+          "status": {
+            "label": "Pending Approval",
+            "color": "yellow"
+          },
+          "actions": ["view"]
+        },
+        {
+          "prId": "PR-2023-002",
+          "requestedBy": "John Doe",
+          "department": "Pharmacy",
+          "date": "2023-10-26",
+          "priority": {
+            "label": "Urgent",
+            "color": "red"
+          },
+          "status": {
+            "label": "Approved",
+            "color": "green"
+          },
+          "actions": ["view"]
+        }
+      ]
+              VENDOR FORM FEILDS
+              {
+                "formId": "VENDOR_PROFILE_001",
+                "formName": "Vendor Profile",
+                "sections": [
+                  {
+                    "sectionLabel": "Company Information",
+                    "fields": [
+                      {
+                        "fieldKey": "vendorName",
+                        "fieldLabel": "Vendor Name",
+                        "fieldType": "text",
+                        "defaultValue": "",
+                        "isRequired": true,
+                        "order": 1
+                      },
+                      {
+                        "fieldKey": "vendorCategory",
+                        "fieldLabel": "Vendor Category",
+                        "fieldType": "dropdown",
+                        "options": ["Pharmaceuticals", "Equipment", "Consumables", "Packaging", "Services"],
+                        "defaultValue": "Pharmaceuticals",
+                        "isRequired": true,
+                        "order": 2
+                      },
+                      {
+                        "fieldKey": "taxId",
+                        "fieldLabel": "Tax ID / GSTIN",
+                        "fieldType": "text",
+                        "defaultValue": "",
+                        "isRequired": false,
+                        "order": 3
+                      },
+                      {
+                        "fieldKey": "website",
+                        "fieldLabel": "Website",
+                        "fieldType": "text",
+                        "defaultValue": "https://",
+                        "isRequired": false,
+                        "order": 4
+                      }
+                    ]
+                  },
+              
+                  {
+                    "sectionLabel": "Contact Person",
+                    "fields": [
+                      {
+                        "fieldKey": "contactName",
+                        "fieldLabel": "Contact Name",
+                        "fieldType": "text",
+                        "defaultValue": "",
+                        "isRequired": true,
+                        "order": 5
+                      },
+                      {
+                        "fieldKey": "email",
+                        "fieldLabel": "Email Address",
+                        "fieldType": "email",
+                        "defaultValue": "",
+                        "isRequired": true,
+                        "order": 6
+                      },
+                      {
+                        "fieldKey": "phoneNumber",
+                        "fieldLabel": "Phone Number",
+                        "fieldType": "text",
+                        "defaultValue": "",
+                        "isRequired": true,
+                        "order": 7
+                      },
+                      {
+                        "fieldKey": "address",
+                        "fieldLabel": "Address",
+                        "fieldType": "textarea",
+                        "defaultValue": "",
+                        "isRequired": false,
+                        "order": 8
+                      }
+                    ]
+                  },
+              
+                  {
+                    "sectionLabel": "Financial & Compliance",
+                    "fields": [
+                      {
+                        "fieldKey": "bankName",
+                        "fieldLabel": "Bank Name",
+                        "fieldType": "text",
+                        "defaultValue": "",
+                        "isRequired": false,
+                        "order": 9
+                      },
+                      {
+                        "fieldKey": "accountNumber",
+                        "fieldLabel": "Account Number",
+                        "fieldType": "text",
+                        "defaultValue": "",
+                        "isRequired": false,
+                        "order": 10
+                      },
+                      {
+                        "fieldKey": "paymentTerms",
+                        "fieldLabel": "Payment Terms",
+                        "fieldType": "dropdown",
+                        "options": ["Net 15", "Net 30", "Net 45", "Advance", "On Delivery"],
+                        "defaultValue": "Net 30",
+                        "isRequired": false,
+                        "order": 11
+                      },
+                      {
+                        "fieldKey": "complianceDocs",
+                        "fieldLabel": "Compliance Documents",
+                        "fieldType": "file",
+                        "defaultValue": "",
+                        "isRequired": false,
+                        "order": 12
+                      }
+                    ]
+                  }
+                ]
+              }
+        VENDOR  DATA
+
+        {
+            "vendorId": "VEND-0001",
+            "vendorName": "ABC Pharmaceuticals Pvt Ltd",
+            "vendorCategory": "Pharmaceuticals",
+            "taxId": "GSTIN29ABCDE1234F1Z5",
+            "website": "https://www.abcpharma.com",
+          
+            "contactPerson": {
+              "name": "Dr. Ramesh Kumar",
+              "email": "ramesh.kumar@abcpharma.com",
+              "phoneNumber": "+91 98765 43210"
+            },
+          
+            "address": {
+              "fullAddress": "123 Medical Park, 5th Cross, Bangalore, Karnataka, India - 560040"
+            },
+          
+            "financialInfo": {
+              "bankName": "HDFC Bank",
+              "accountNumber": "123456789012",
+              "paymentTerms": "Net 30"
+            },
+          
+            "complianceDocuments": [
+              {
+                "fileName": "GST_Certificate.pdf",
+                "fileUrl": "https://storage.example.com/vendors/GST_Certificate.pdf"
+              },
+              {
+                "fileName": "Drug_License.pdf",
+                "fileUrl": "https://storage.example.com/vendors/Drug_License.pdf"
+              }
+            ],
+          
+            "createdAt": "2025-01-15T10:45:00Z",
+            "createdBy": "adminUser123"
+          }
+
+          GRN FORM FEILD DATA
+          {
+            "formName": "Receive Goods (GRN)",
+            "isActive": true,
+          
+            "fields": [
+              {
+                "fieldKey": "purchaseOrderId",
+                "fieldLabel": "Select Purchase Order",
+                "fieldType": "dropdown",
+                "isRequired": true,
+                "defaultValue": "",
+                "optionsSource": "purchase_orders"
+              },
+              {
+                "fieldKey": "invoiceNo",
+                "fieldLabel": "Delivery Note / Invoice No.",
+                "fieldType": "text",
+                "isRequired": false,
+                "defaultValue": ""
+              },
+              {
+                "fieldKey": "receivedDate",
+                "fieldLabel": "Received Date",
+                "fieldType": "date",
+                "isRequired": true,
+                "defaultValue": ""
+              },
+              {
+                "fieldKey": "receivedBy",
+                "fieldLabel": "Received By",
+                "fieldType": "text",
+                "isRequired": true,
+                "defaultValue": "Current User"
+              },
+          
+              {
+                "section": "itemsToReceive",
+                "fieldLabel": "Items to Receive",
+                "repeatable": true,
+                "fields": [
+                  {
+                    "fieldKey": "itemName",
+                    "fieldLabel": "Item",
+                    "fieldType": "label",
+                    "defaultValue": ""
+                  },
+                  {
+                    "fieldKey": "orderedQty",
+                    "fieldLabel": "Ordered",
+                    "fieldType": "label",
+                    "defaultValue": ""
+                  },
+                  {
+                    "fieldKey": "receivedQty",
+                    "fieldLabel": "Received",
+                    "fieldType": "number",
+                    "isRequired": true,
+                    "defaultValue": ""
+                  },
+                  {
+                    "fieldKey": "batchNo",
+                    "fieldLabel": "Batch No.",
+                    "fieldType": "text",
+                    "isRequired": true,
+                    "defaultValue": ""
+                  },
+                  {
+                    "fieldKey": "expiryDate",
+                    "fieldLabel": "Expiry",
+                    "fieldType": "date",
+                    "isRequired": true,
+                    "defaultValue": ""
+                  },
+                  {
+                    "fieldKey": "temperature",
+                    "fieldLabel": "Temp (°C)",
+                    "fieldType": "number",
+                    "isRequired": false,
+                    "defaultValue": ""
+                  },
+                  {
+                    "fieldKey": "status",
+                    "fieldLabel": "Status",
+                    "fieldType": "dropdown",
+                    "isRequired": true,
+                    "defaultValue": "Accepted",
+                    "options": ["Accepted", "Rejected", "Damaged"]
+                  }
+                ]
+              },
+          
+              {
+                "fieldKey": "remarks",
+                "fieldLabel": "Remarks",
+                "fieldType": "textarea",
+                "isRequired": false,
+                "defaultValue": ""
+              }
+            ]
+          }
+
+          {
+            "columns": [
+              "grnId",
+              "poReference",
+              "vendorName",
+              "dateReceived",
+              "receivedBy",
+              "status",
+              "actions"
+            ],
+            "rows": [
+              {
+                "grnId": "GRN-2023-001",
+                "poReference": "PO-2023-001",
+                "vendorName": "PharmaCorp Ltd",
+                "dateReceived": "2023-11-01",
+                "receivedBy": "Store Manager",
+                "status": "Completed",
+                "actions": {
+                  "view": true,
+                  "refresh": true
+                }
+              },
+              {
+                "grnId": "GRN-2023-002",
+                "poReference": "PO-2023-004",
+                "vendorName": "ABC Medical Supplies",
+                "dateReceived": "2023-11-10",
+                "receivedBy": "Assistant Manager",
+                "status": "Pending",
+                "actions": {
+                  "view": true,
+                  "refresh": false
+                }
+              }
+            ]
+          }
+          
+STORAGE LOCATION TABLE FEILDS
+{
+    "columns": [
+      { "name": "id", "type": "string" },
+      { "name": "name", "type": "string" },
+      { "name": "type", "type": "string" },
+      { "name": "parentLocation", "type": "string | null" },
+      { "name": "capacity", "type": "number" },
+      { "name": "status", "type": "string" },
+      { "name": "actions", "type": "object" }
+    ]
+  }
+  {
+    "rows": [
+      {
+        "id": "LOC001",
+        "name": "Main Warehouse",
+        "type": "Warehouse",
+        "parentLocation": null,
+        "capacity": 100,
+        "status": "Active",
+        "actions": { "view": true, "edit": true, "delete": true }
+      },
+      {
+        "id": "LOC002",
+        "name": "Cold Storage Room",
+        "type": "Room",
+        "parentLocation": "Main Warehouse",
+        "capacity": 45,
+        "status": "Active",
+        "actions": { "view": true, "edit": true, "delete": true }
+      },
+      {
+        "id": "LOC003",
+        "name": "Rack A",
+        "type": "Rack",
+        "parentLocation": "Main Warehouse",
+        "capacity": 80,
+        "status": "Active",
+        "actions": { "view": true, "edit": true, "delete": true }
+      },
+      {
+        "id": "LOC004",
+        "name": "Shelf A1",
+        "type": "Shelf",
+        "parentLocation": "Rack A",
+        "capacity": 20,
+        "status": "Active",
+        "actions": { "view": true, "edit": true, "delete": true }
+      },
+      {
+        "id": "LOC005",
+        "name": "Bin 101",
+        "type": "Bin",
+        "parentLocation": "Shelf A1",
+        "capacity": 0,
+        "status": "Empty",
+        "actions": { "view": true, "edit": true, "delete": true }
+      },
+      {
+        "id": "LOC006",
+        "name": "Chemical Cabinet",
+        "type": "Cabinet",
+        "parentLocation": "Main Warehouse",
+        "capacity": 60,
+        "status": "Active",
+        "actions": { "view": true, "edit": true, "delete": true }
+      }
+    ]
+  }
+    STORAGE LOCATION FORM DATA
+
+ {
+    "storageLocationForm": [
+      {
+        "fieldKey": "id",
+        "fieldLabel": "Location ID",
+        "type": "text",
+        "required": true,
+        "placeholder": "LOC001"
+      },
+      {
+        "fieldKey": "name",
+        "fieldLabel": "Location Name",
+        "type": "text",
+        "required": true,
+        "placeholder": "Main Warehouse"
+      },
+      {
+        "fieldKey": "type",
+        "fieldLabel": "Location Type",
+        "type": "dropdown",
+        "required": true,
+        "options": [
+          "Warehouse",
+          "Room",
+          "Rack",
+          "Shelf",
+          "Bin",
+          "Cabinet"
+        ]
+      },
+      {
+        "fieldKey": "parentLocation",
+        "fieldLabel": "Parent Location",
+        "type": "dropdown",
+        "required": false,
+        "options": []  
+      },
+      {
+        "fieldKey": "capacity",
+        "fieldLabel": "Capacity (%)",
+        "type": "number",
+        "required": true,
+        "placeholder": "0 - 100"
+      },
+      {
+        "fieldKey": "status",
+        "fieldLabel": "Status",
+        "type": "dropdown",
+        "required": true,
+        "options": [
+          "Active",
+          "Inactive",
+          "Empty"
+        ]
+      }
+    ]
+  }
+
+  Transaction Traceability table  data
+
+  {
+    "columns": [
+      "dateTime",
+      "type",
+      "reference",
+      "item",
+      "quantity",
+      "user",
+      "location"
+    ],
+    "rows": [
+      {
+        "dateTime": "2023-11-01 10:30",
+        "type": "GRN",
+        "reference": "GRN-2023-001",
+        "item": "Paracetamol 500mg",
+        "quantity": "+1000",
+        "user": "Store Manager",
+        "location": "Main Store"
+      },
+      {
+        "dateTime": "2023-11-02 14:15",
+        "type": "Adjustment",
+        "reference": "ADJ-2023-001",
+        "item": "Insulin Glargine",
+        "quantity": "-2",
+        "user": "Store Keeper",
+        "location": "Pharmacy"
+      },
+      {
+        "dateTime": "2023-11-03 09:00",
+        "type": "Issue",
+        "reference": "ISS-2023-055",
+        "item": "Surgical Gloves",
+        "quantity": "-50",
+        "user": "Nurse Station A",
+        "location": "Ward A Storage"
+      }
+    ]
+  }
+  Approval Workflows card  data
+  [
+    {
+      "id": "AP-001",
+      "date": "2023-10-25",
+      "type": "Purchase Requisition",
+      "description": "Surgical Gloves for IVF Lab",
+      "requestedBy": "Dr. Sarah Smith",
+      "priority": "High",
+      "actions": ["Approve", "Reject"]
+    },
+    {
+      "id": "AP-002",
+      "date": "2023-10-29",
+      "type": "Vendor Registration",
+      "description": "New Vendor: SafeHands Inc",
+      "requestedBy": "Procurement Officer",
+      "priority": "Urgent",
+      "actions": ["Approve", "Reject"]
+    },
+    {
+      "id": "AP-003",
+      "date": "2023-11-15",
+      "type": "Stock Adjustment",
+      "description": "Expiry Write-off: Insulin",
+      "requestedBy": "Store Keeper",
+      "priority": "Urgent",
+      "actions": ["Approve", "Reject"]
+    }
+  ]
+  
+  
+
+  
+ 
