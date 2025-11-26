@@ -81,16 +81,14 @@ class InventoryControlScreen extends StatelessWidget {
                       tooltip: 'Open menu',
                     ),
                   if (!isSmallScreen)
-                    Flexible(
-                      child: Text(
-                        'Inventory Control',
-                        style: TextStyle(
-                          fontSize: ResponsiveHelper.getTitleFontSize(context),
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      'Inventory Control',
+                      style: TextStyle(
+                        fontSize: ResponsiveHelper.getTitleFontSize(context),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                 ],
               ),

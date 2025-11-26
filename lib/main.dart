@@ -4,6 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/dashboard_provider.dart';
+import 'providers/item_column_visibility_provider.dart';
+import 'providers/item_table_provider.dart';
 import 'screens/auth_gate.dart';
 
 void main() async {
@@ -34,6 +36,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
+        ChangeNotifierProvider(create: (_) => ItemTableProvider()),
+        ChangeNotifierProvider(create: (_) => ItemColumnVisibilityProvider()),
       ],
       child: MaterialApp(
         title: 'Embryo One',

@@ -49,7 +49,7 @@ class LoginScreen extends StatelessWidget {
                             labelText: 'Email',
                             border: OutlineInputBorder(),
                           ),
-                          onChanged: auth.updateLoginEmail,
+                          onChanged: auth.  updateLoginEmail,
                         ),
                         const SizedBox(height: 16),
                         TextField(

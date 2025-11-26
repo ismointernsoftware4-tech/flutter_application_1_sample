@@ -96,6 +96,30 @@ class ItemMaster {
     required this.stock,
     required this.status,
   });
+
+  ItemMaster copyWith({
+    String? itemCode,
+    String? itemName,
+    String? manufacturer,
+    String? type,
+    String? category,
+    String? unit,
+    String? storage,
+    int? stock,
+    String? status,
+  }) {
+    return ItemMaster(
+      itemCode: itemCode ?? this.itemCode,
+      itemName: itemName ?? this.itemName,
+      manufacturer: manufacturer ?? this.manufacturer,
+      type: type ?? this.type,
+      category: category ?? this.category,
+      unit: unit ?? this.unit,
+      storage: storage ?? this.storage,
+      stock: stock ?? this.stock,
+      status: status ?? this.status,
+    );
+  }
 }
 
 class User {
