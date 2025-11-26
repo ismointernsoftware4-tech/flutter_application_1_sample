@@ -1,0 +1,166 @@
+{
+  "formName": "Storage Location",
+  "isActive": true,
+  "formFields": [
+    {
+      "fieldKey": "id",
+      "fieldLabel": "Location ID",
+      "fieldType": "text",
+      "defaultValue": "",
+      "placeholder": "LOC001",
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 1
+    },
+    {
+      "fieldKey": "name",
+      "fieldLabel": "Location Name",
+      "fieldType": "text",
+      "defaultValue": "",
+      "placeholder": "Main Warehouse",
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 2
+    },
+    {
+      "fieldKey": "type",
+      "fieldLabel": "Location Type",
+      "fieldType": "dropdown",
+      "defaultValue": "",
+      "options": [
+        "Warehouse",
+        "Room",
+        "Rack",
+        "Shelf",
+        "Bin",
+        "Cabinet"
+      ],
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 3
+    },
+    {
+      "fieldKey": "parentLocation",
+      "fieldLabel": "Parent Location",
+      "fieldType": "dropdown",
+      "defaultValue": "",
+      "options": [],
+      "isRequired": false,
+      "isShowInTable": true,
+      "order": 4
+    },
+    {
+      "fieldKey": "capacity",
+      "fieldLabel": "Capacity (%)",
+      "fieldType": "number",
+      "defaultValue": 0,
+      "placeholder": "0 - 100",
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 5
+    },
+    {
+      "fieldKey": "status",
+      "fieldLabel": "Status",
+      "fieldType": "dropdown",
+      "defaultValue": "Active",
+      "options": [
+        "Active",
+        "Inactive",
+        "Empty"
+      ],
+      "isRequired": true,
+      "isShowInTable": true,
+      "order": 6
+    }
+  ],
+  "tableColumns": [
+    "id",
+    "name",
+    "type",
+    "parentLocation",
+    "capacity",
+    "status",
+    "actions"
+  ],
+  "sampleData": [
+    {
+      "id": "LOC001",
+      "name": "Main Warehouse",
+      "type": "Warehouse",
+      "parentLocation": null,
+      "capacity": 100,
+      "status": "Active",
+      "actions": {
+        "view": true,
+        "edit": true,
+        "delete": true
+      }
+    },
+    {
+      "id": "LOC002",
+      "name": "Cold Storage Room",
+      "type": "Room",
+      "parentLocation": "Main Warehouse",
+      "capacity": 45,
+      "status": "Active",
+      "actions": {
+        "view": true,
+        "edit": true,
+        "delete": true
+      }
+    },
+    {
+      "id": "LOC003",
+      "name": "Rack A",
+      "type": "Rack",
+      "parentLocation": "Main Warehouse",
+      "capacity": 80,
+      "status": "Active",
+      "actions": {
+        "view": true,
+        "edit": true,
+        "delete": true
+      }
+    },
+    {
+      "id": "LOC004",
+      "name": "Shelf A1",
+      "type": "Shelf",
+      "parentLocation": "Rack A",
+      "capacity": 20,
+      "status": "Active",
+      "actions": {
+        "view": true,
+        "edit": true,
+        "delete": true
+      }
+    },
+    {
+      "id": "LOC005",
+      "name": "Bin 101",
+      "type": "Bin",
+      "parentLocation": "Shelf A1",
+      "capacity": 0,
+      "status": "Empty",
+      "actions": {
+        "view": true,
+        "edit": true,
+        "delete": true
+      }
+    },
+    {
+      "id": "LOC006",
+      "name": "Chemical Cabinet",
+      "type": "Cabinet",
+      "parentLocation": "Main Warehouse",
+      "capacity": 60,
+      "status": "Active",
+      "actions": {
+        "view": true,
+        "edit": true,
+        "delete": true
+      }
+    }
+  ]
+}
