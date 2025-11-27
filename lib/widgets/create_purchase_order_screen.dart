@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/purchase_requisition_provider.dart';
+import '../providers/purchase_order_provider.dart';
 import '../providers/procurement_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../models/dashboard_models.dart';
-import '../utils/responsive_helper.dart';
 
-class CreatePurchaseRequisitionScreen extends StatefulWidget {
-  const CreatePurchaseRequisitionScreen({super.key});
+class CreatePurchaseOrderScreen extends StatefulWidget {
+  const CreatePurchaseOrderScreen({super.key});
 
   @override
-  State<CreatePurchaseRequisitionScreen> createState() => _CreatePurchaseRequisitionScreenState();
+  State<CreatePurchaseOrderScreen> createState() => _CreatePurchaseOrderScreenState();
 }
 
-class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisitionScreen> {
+class _CreatePurchaseOrderScreenState extends State<CreatePurchaseOrderScreen> {
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -31,7 +30,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => PurchaseRequisitionProvider(),
+      create: (_) => PurchaseOrderProvider(),
       child: Builder(
         builder: (context) {
           return Container(
@@ -91,9 +90,10 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
   }
 
   Widget _formCard(BuildContext context) {
-    final prProvider = context.watch<PurchaseRequisitionProvider>();
+    final poProvider = context.watch<PurchaseOrderProvider>();
     final dashboardProvider = context.watch<DashboardProvider>();
     final items = dashboardProvider.itemMasterList;
+    final vendors = dashboardProvider.vendors;
 
     return Container(
       padding: const EdgeInsets.all(32),
@@ -127,7 +127,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  Icons.shopping_cart_outlined,
+                  Icons.description_outlined,
                   color: Colors.blue.shade700,
                   size: 24,
                 ),
@@ -138,7 +138,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Create Purchase Requisition',
+                      'Create Purchase Order',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -148,7 +148,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Request items for procurement',
+                      'Create a new purchase order',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -160,21 +160,22 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
             ],
           ),
           const SizedBox(height: 32),
-          _requisitionDetailsSection(context, prProvider),
+          _orderDetailsSection(context, poProvider, vendors),
           const SizedBox(height: 32),
-          _itemsRequiredSection(context, prProvider, items),
+          _itemsSection(context, poProvider, items),
           const SizedBox(height: 32),
-          _notesSection(context, prProvider),
+          _notesSection(context, poProvider),
           const SizedBox(height: 32),
-          _actionButtons(context, prProvider),
+          _actionButtons(context, poProvider),
         ],
       ),
     );
   }
 
-  Widget _requisitionDetailsSection(
+  Widget _orderDetailsSection(
     BuildContext context,
-    PurchaseRequisitionProvider provider,
+    PurchaseOrderProvider provider,
+    List<Vendor> vendors,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -195,7 +196,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Requisition Details',
+                  'Order Details',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -211,37 +212,36 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
               children: [
                 SizedBox(
                   width: isWide ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth,
-                  child: _textField(
-                    controller: provider.requestedByController,
-                    label: 'Requested By',
-                    hint: 'Current User',
-                    enabled: false,
-                  ),
-                ),
-                SizedBox(
-                  width: isWide ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth,
-                  child: _dropdown(
-                    label: 'Department *',
-                    value: provider.selectedDepartment,
-                    items: provider.departments,
-                    onChanged: provider.setDepartment,
-                  ),
-                ),
-                SizedBox(
-                  width: isWide ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth,
-                  child: _dropdown(
-                    label: 'Priority *',
-                    value: provider.selectedPriority,
-                    items: provider.priorities,
-                    onChanged: provider.setPriority,
+                  child: _vendorDropdown(
+                    label: 'Vendor *',
+                    value: provider.selectedVendor,
+                    vendors: vendors,
+                    onChanged: provider.setVendor,
                   ),
                 ),
                 SizedBox(
                   width: isWide ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth,
                   child: _dateField(
-                    controller: provider.requiredDateController,
-                    label: 'Required Date',
+                    controller: provider.expectedDeliveryDateController,
+                    label: 'Expected Delivery Date',
                     hint: 'mm/dd/yyyy',
+                  ),
+                ),
+                SizedBox(
+                  width: isWide ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth,
+                  child: _dropdown(
+                    label: 'Payment Terms',
+                    value: provider.selectedPaymentTerms,
+                    items: provider.paymentTerms,
+                    onChanged: provider.setPaymentTerms,
+                  ),
+                ),
+                SizedBox(
+                  width: isWide ? (constraints.maxWidth - 24) / 2 : constraints.maxWidth,
+                  child: _textField(
+                    controller: provider.referencePRController,
+                    label: 'Reference PR (Optional)',
+                    hint: 'Enter PR Number',
                   ),
                 ),
               ],
@@ -252,9 +252,9 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
     );
   }
 
-  Widget _itemsRequiredSection(
+  Widget _itemsSection(
     BuildContext context,
-    PurchaseRequisitionProvider provider,
+    PurchaseOrderProvider provider,
     List items,
   ) {
     return Column(
@@ -275,7 +275,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Items Required',
+                  'Items',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -323,6 +323,8 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
                     Expanded(flex: 3, child: Text('Item', style: TextStyle(fontWeight: FontWeight.w600))),
                     Expanded(flex: 2, child: Text('Quantity', style: TextStyle(fontWeight: FontWeight.w600))),
                     Expanded(flex: 2, child: Text('Unit', style: TextStyle(fontWeight: FontWeight.w600))),
+                    Expanded(flex: 2, child: Text('Unit Price (\$)', style: TextStyle(fontWeight: FontWeight.w600))),
+                    Expanded(flex: 2, child: Text('Total (\$)', style: TextStyle(fontWeight: FontWeight.w600))),
                     Expanded(flex: 1, child: Text('Action', style: TextStyle(fontWeight: FontWeight.w600))),
                   ],
                 ),
@@ -332,6 +334,36 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
                 final item = entry.value;
                 return _itemRow(context, provider, items, index, item);
               }),
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: Colors.grey[300]!),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'Total Amount:',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '\$${provider.totalAmount.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -341,10 +373,10 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
 
   Widget _itemRow(
     BuildContext context,
-    PurchaseRequisitionProvider provider,
+    PurchaseOrderProvider provider,
     List items,
     int index,
-    PurchaseRequisitionItem item,
+    PurchaseOrderItem item,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -419,6 +451,42 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
           ),
           const SizedBox(width: 12),
           Expanded(
+            flex: 2,
+            child: TextField(
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                hintText: '0',
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              ),
+              controller: TextEditingController(text: item.unitPrice.toStringAsFixed(2)),
+              onChanged: (value) {
+                final price = double.tryParse(value) ?? 0.0;
+                provider.updateItem(index, unitPrice: price);
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '\$${item.total.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             flex: 1,
             child: IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -470,7 +538,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
 
   Widget _notesSection(
     BuildContext context,
-    PurchaseRequisitionProvider provider,
+    PurchaseOrderProvider provider,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,7 +555,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Notes / Justification',
+                  'Notes / Terms',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -501,7 +569,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
           controller: provider.notesController,
           maxLines: 4,
           decoration: InputDecoration(
-            hintText: 'Reason for request...',
+            hintText: 'Additional terms or notes...',
             filled: true,
             fillColor: Colors.grey.shade50,
             border: OutlineInputBorder(
@@ -525,7 +593,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
 
   Widget _actionButtons(
     BuildContext context,
-    PurchaseRequisitionProvider provider,
+    PurchaseOrderProvider provider,
   ) {
     return Row(
       children: [
@@ -541,8 +609,8 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
         const SizedBox(width: 16),
         ElevatedButton.icon(
           onPressed: provider.canSubmit ? () => _submit(context, provider) : null,
-          icon: const Icon(Icons.save),
-          label: const Text('Submit Requisition'),
+          icon: const Icon(Icons.description),
+          label: const Text('Create PO'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blue.shade600,
             foregroundColor: Colors.white,
@@ -657,6 +725,62 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
     );
   }
 
+  Widget _vendorDropdown({
+    required String label,
+    required String? value,
+    required List<Vendor> vendors,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        InputDecorator(
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.blue.shade600, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              hint: const Text('Select Vendor'),
+              items: vendors
+                  .map(
+                    (vendor) => DropdownMenuItem(
+                      value: vendor.name,
+                      child: Text(vendor.name),
+                    ),
+                  )
+                  .toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _dateField({
     required TextEditingController controller,
     required String label,
@@ -702,7 +826,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
     );
   }
 
-  Future<void> _submit(BuildContext context, PurchaseRequisitionProvider provider) async {
+  Future<void> _submit(BuildContext context, PurchaseOrderProvider provider) async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -711,7 +835,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
       // TODO: Implement actual submission logic
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Purchase Requisition submitted successfully')),
+          const SnackBar(content: Text('Purchase Order created successfully')),
         );
         context.read<ProcurementProvider>().closeCreateForm();
       }
@@ -719,7 +843,7 @@ class _CreatePurchaseRequisitionScreenState extends State<CreatePurchaseRequisit
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error submitting requisition: $e'),
+            content: Text('Error creating purchase order: $e'),
             backgroundColor: Colors.red,
           ),
         );

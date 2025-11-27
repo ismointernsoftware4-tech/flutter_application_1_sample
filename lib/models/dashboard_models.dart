@@ -84,6 +84,7 @@ class ItemMaster {
   final String storage;
   final int stock;
   final String status;
+  final Map<String, dynamic> rawValues;
 
   ItemMaster({
     required this.itemCode,
@@ -95,7 +96,8 @@ class ItemMaster {
     required this.storage,
     required this.stock,
     required this.status,
-  });
+    Map<String, dynamic>? rawValues,
+  }) : rawValues = Map.unmodifiable(rawValues ?? const {});
 
   ItemMaster copyWith({
     String? itemCode,
@@ -107,6 +109,7 @@ class ItemMaster {
     String? storage,
     int? stock,
     String? status,
+    Map<String, dynamic>? rawValues,
   }) {
     return ItemMaster(
       itemCode: itemCode ?? this.itemCode,
@@ -118,7 +121,87 @@ class ItemMaster {
       storage: storage ?? this.storage,
       stock: stock ?? this.stock,
       status: status ?? this.status,
+      rawValues: rawValues ?? this.rawValues,
     );
+  }
+
+  String valueFor(String key) {
+    // First, check rawValues which contains all JSON data dynamically
+    final value = rawValues[key];
+    if (value != null) {
+      if (value is num) {
+        return value.toString();
+      }
+      if (value is bool) {
+        return value ? 'Yes' : 'No';
+      }
+      if (value is List) {
+        return value.isEmpty ? '-' : value.join(', ');
+      }
+      return value.toString();
+    }
+
+    // Fallback to check for common field key variations
+    final variations = _getFieldKeyVariations(key);
+    for (final variation in variations) {
+      final variantValue = rawValues[variation];
+      if (variantValue != null) {
+        if (variantValue is num) {
+          return variantValue.toString();
+        }
+        if (variantValue is bool) {
+          return variantValue ? 'Yes' : 'No';
+        }
+        return variantValue.toString();
+      }
+    }
+
+    // Legacy fallback for hardcoded fields (backward compatibility)
+    switch (key) {
+      case 'itemCode':
+        return itemCode;
+      case 'itemName':
+        return itemName;
+      case 'type':
+      case 'itemType':
+        return type;
+      case 'category':
+        return category;
+      case 'manufacturer':
+        return manufacturer;
+      case 'unit':
+      case 'unitOfMeasure':
+        return unit;
+      case 'storage':
+      case 'storageConditions':
+        return storage;
+      case 'stock':
+        return stock.toString();
+      case 'status':
+        return status;
+      default:
+        return '';
+    }
+  }
+
+  List<String> _getFieldKeyVariations(String key) {
+    // Return common variations of the key for flexible matching
+    switch (key) {
+      case 'type':
+        return ['itemType'];
+      case 'itemType':
+        return ['type'];
+      case 'unit':
+        return ['unitOfMeasure', 'uom'];
+      case 'unitOfMeasure':
+        return ['unit', 'uom'];
+      case 'storage':
+        return ['storageConditions'];
+      case 'storageConditions':
+        return ['storage'];
+      default:
+        return [];
+    }
   }
 }
 
@@ -210,6 +293,7 @@ class PurchaseOrder {
   final String id;
   final String vendor;
   final String date;
+  final String? deliveryDate;
   final String amount;
   final String status;
 
@@ -217,6 +301,7 @@ class PurchaseOrder {
     required this.id,
     required this.vendor,
     required this.date,
+    this.deliveryDate,
     required this.amount,
     required this.status,
   });
@@ -237,6 +322,30 @@ class GoodsReceipt {
     required this.dateReceived,
     required this.receivedBy,
     required this.status,
+  });
+}
+
+class ReceivingTask {
+  final IconData icon;
+  final String title;
+  final String reference;
+  final String meta;
+  final List<String> itemTags;
+  final String primaryLabel;
+  final String? secondaryLabel;
+  final Color primaryColor;
+  final Color? secondaryColor;
+
+  const ReceivingTask({
+    required this.icon,
+    required this.title,
+    required this.reference,
+    required this.meta,
+    required this.itemTags,
+    required this.primaryLabel,
+    this.secondaryLabel,
+    this.primaryColor = const Color(0xFF0057B7),
+    this.secondaryColor,
   });
 }
 

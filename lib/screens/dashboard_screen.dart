@@ -10,6 +10,7 @@ import 'item_master_screen.dart';
 import 'users_roles_screen.dart';
 import 'procurement_screen.dart';
 import 'grn_receiving_screen.dart';
+import 'receiving_qc_screen.dart';
 import 'inventory_control_screen.dart';
 import 'storage_locations_screen.dart';
 import 'traceability_screen.dart';
@@ -64,6 +65,10 @@ class DashboardScreen extends StatelessWidget {
                     
                     if (selectedNavItem == 'GRN & Receiving') {
                       return const GrnReceivingScreen();
+                    }
+                    
+                    if (selectedNavItem == 'Receiving & QC') {
+                      return const ReceivingQcScreen();
                     }
                     
                     if (selectedNavItem == 'Inventory Control') {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/dashboard_models.dart';
-import '../providers/dashboard_provider.dart';
+import '../models/grn_schema.dart';
+import '../providers/grn_table_provider.dart';
 import '../utils/responsive_helper.dart';
 
 class GrnReceivingScreen extends StatelessWidget {
@@ -10,8 +10,6 @@ class GrnReceivingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final goodsReceipts = context.watch<DashboardProvider>().goodsReceipts;
-
     return Container(
       color: Colors.grey[100],
       child: Column(
@@ -25,7 +23,7 @@ class GrnReceivingScreen extends StatelessWidget {
                 children: [
                   _buildActionBar(),
                   const SizedBox(height: 24),
-                  _buildTable(goodsReceipts),
+                  _buildTable(context),
                 ],
               ),
             ),
@@ -40,7 +38,7 @@ class GrnReceivingScreen extends StatelessWidget {
     final isTablet = ResponsiveHelper.isTablet(context);
     final screenPadding = ResponsiveHelper.getScreenPadding(context);
     final searchWidth = ResponsiveHelper.getSearchBarWidth(context);
-    
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: screenPadding.horizontal,
@@ -51,7 +49,7 @@ class GrnReceivingScreen extends StatelessWidget {
         builder: (context, constraints) {
           final screenWidth = MediaQuery.of(context).size.width;
           final isSmallScreen = screenWidth < 700;
-          
+
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -129,17 +127,55 @@ class GrnReceivingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTable(List<GoodsReceipt> data) {
-    final headers = [
-      'GRN ID',
-      'PO Reference',
-      'Vendor',
-      'Date Received',
-      'Received By',
-      'Status',
-      'Actions',
-    ];
+  Widget _buildTable(BuildContext context) {
+    final grnProvider = context.watch<GrnTableProvider>();
+    final columns = grnProvider.columns;
+    final rows = grnProvider.rows;
+    final isLoading = grnProvider.isLoading;
 
+    if (isLoading) {
+      return _tableContainer(
+        child: const Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    if (columns.isEmpty) {
+      return _tableContainer(
+        child: const Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(
+            child: Text(
+              'No GRN schema columns found. Please check schemas/grn_schema.json.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return _tableContainer(
+      child: Column(
+        children: [
+          _buildTableHeader(columns),
+          const Divider(height: 1),
+          if (rows.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: Text('No GRN records found in the schema sampleData.'),
+              ),
+            )
+          else
+            ...rows.map((row) => _buildTableRow(columns, row)),
+        ],
+      ),
+    );
+  }
+
+  Widget _tableContainer({required Widget child}) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -153,87 +189,107 @@ class GrnReceivingScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-            ),
-            child: Row(
-              children: headers
-                  .map(
-                    (header) => Expanded(
-                      flex: header == 'GRN ID' ? 2 : 3,
-                      child: Text(
-                        header,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-          const Divider(height: 1),
-          ...data.map(
-            (item) => Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              decoration: const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: Color(0xFFE5E7EB)),
+      child: child,
+    );
+  }
+
+  Widget _buildTableHeader(List<String> columns) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Row(
+        children: columns
+            .map(
+              (key) => Expanded(
+                flex: key == 'grnId'
+                    ? 2
+                    : key == 'actions'
+                    ? 3
+                    : 3,
+                child: Text(
+                  _columnLabel(key),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
+                  ),
                 ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: _linkText(item.grnId),
-                  ),
-                  Expanded(flex: 3, child: Text(item.poReference)),
-                  Expanded(flex: 3, child: Text(item.vendor)),
-                  Expanded(flex: 3, child: Text(item.dateReceived)),
-                  Expanded(flex: 3, child: Text(item.receivedBy)),
-                  Expanded(
-                    flex: 3,
-                    child: _statusChip(item.status),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove_red_eye_outlined),
-                          onPressed: () {},
-                          iconSize: 20,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          tooltip: 'View',
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.check_circle_outline),
-                          onPressed: () {},
-                          iconSize: 20,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          tooltip: 'Approve',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+            )
+            .toList(),
       ),
+    );
+  }
+
+  Widget _buildTableRow(List<String> columns, GrnTableRow row) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+      ),
+      child: Row(
+        children: columns
+            .map(
+              (column) => Expanded(
+                flex: column == 'grnId'
+                    ? 2
+                    : column == 'actions'
+                    ? 3
+                    : 3,
+                child: _buildCell(column, row),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildCell(String column, GrnTableRow row) {
+    switch (column) {
+      case 'grnId':
+        return _linkText(row.valueFor(column));
+      case 'status':
+        return _statusChip(row.valueFor(column));
+      case 'actions':
+        return _buildActions(row);
+      default:
+        return Text(row.valueFor(column));
+    }
+  }
+
+  Widget _buildActions(GrnTableRow row) {
+    final viewEnabled = row.actionEnabled('view');
+    final refreshEnabled = row.actionEnabled('refresh');
+
+    if (!viewEnabled && !refreshEnabled) {
+      return const SizedBox.shrink();
+    }
+
+    return Wrap(
+      spacing: 4,
+      runSpacing: 4,
+      children: [
+        if (viewEnabled)
+          IconButton(
+            icon: const Icon(Icons.remove_red_eye_outlined),
+            onPressed: () {},
+            iconSize: 20,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: 'View',
+          ),
+        if (refreshEnabled)
+          IconButton(
+            icon: const Icon(Icons.check_circle_outline),
+            onPressed: () {},
+            iconSize: 20,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: 'Refresh',
+          ),
+      ],
     );
   }
 
@@ -245,9 +301,7 @@ class GrnReceivingScreen extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.grey[700],
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -276,12 +330,40 @@ class GrnReceivingScreen extends StatelessWidget {
       ),
       child: Text(
         status,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: color, fontWeight: FontWeight.w600),
       ),
     );
   }
-}
 
+  String _columnLabel(String key) {
+    const overrides = {
+      'grnId': 'GRN ID',
+      'poReference': 'PO Reference',
+      'vendorName': 'Vendor',
+      'dateReceived': 'Date Received',
+      'receivedBy': 'Received By',
+      'status': 'Status',
+      'actions': 'Actions',
+    };
+
+    if (overrides.containsKey(key)) {
+      return overrides[key]!;
+    }
+
+    final buffer = StringBuffer();
+    for (var i = 0; i < key.length; i++) {
+      final char = key[i];
+      final isUpper = char.toUpperCase() == char && char != char.toLowerCase();
+      if (i == 0) {
+        buffer.write(char.toUpperCase());
+      } else if (isUpper) {
+        buffer
+          ..write(' ')
+          ..write(char);
+      } else {
+        buffer.write(char);
+      }
+    }
+    return buffer.toString();
+  }
+}

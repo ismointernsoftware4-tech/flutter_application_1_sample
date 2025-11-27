@@ -109,7 +109,8 @@
     "dateReceived",
     "receivedBy",
     "status",
-    "actions"
+    "actions",
+    "sameer"
   ],
   "sampleData": [
     {
@@ -133,7 +134,7 @@
       "status": "Pending",
       "actions": {
         "view": true,
-        "refresh": false
+        "refresh": true
       }
     }
   ]

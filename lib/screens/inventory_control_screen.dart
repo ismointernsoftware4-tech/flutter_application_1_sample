@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/dashboard_models.dart';
-import 'stock_audits_screen.dart';
-import 'stock_adjustment_screen.dart';
-import 'internal_transfers_screen.dart';
-import 'branch_transfers_screen.dart';
-import 'stock_returns_screen.dart';
-import 'internal_consumption_screen.dart';
 import '../providers/dashboard_provider.dart';
 import '../utils/responsive_helper.dart';
+import 'branch_transfers_screen.dart';
+import 'internal_consumption_screen.dart';
+import 'internal_transfers_screen.dart';
+import 'stock_adjustment_screen.dart';
+import 'stock_audits_screen.dart';
+import 'stock_returns_screen.dart';
 
 class InventoryControlScreen extends StatelessWidget {
   const InventoryControlScreen({super.key});
@@ -31,17 +31,29 @@ class InventoryControlScreen extends StatelessWidget {
                 children: [
                   _quickActions(context, provider.inventoryActions),
                   const SizedBox(height: 32),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _auditsCard(provider.recentAudits),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: _adjustmentsCard(provider.recentAdjustments),
-                      ),
-                    ],
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isStacked = constraints.maxWidth < 900;
+                      if (isStacked) {
+                        return Column(
+                          children: [
+                            _auditsCard(provider.recentAudits),
+                            const SizedBox(height: 20),
+                            _adjustmentsCard(provider.recentAdjustments),
+                          ],
+                        );
+                      }
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: _auditsCard(provider.recentAudits)),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: _adjustmentsCard(provider.recentAdjustments),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -56,7 +68,7 @@ class InventoryControlScreen extends StatelessWidget {
     final isMobile = ResponsiveHelper.isMobile(context);
     final isTablet = ResponsiveHelper.isTablet(context);
     final screenPadding = ResponsiveHelper.getScreenPadding(context);
-    
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: screenPadding.horizontal,
@@ -67,48 +79,55 @@ class InventoryControlScreen extends StatelessWidget {
         builder: (context, constraints) {
           final screenWidth = MediaQuery.of(context).size.width;
           final isSmallScreen = screenWidth < 700;
-          
+
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  // Menu icon for mobile/tablet
                   if (isMobile || isTablet)
                     IconButton(
                       icon: const Icon(Icons.menu),
                       onPressed: () => Scaffold.of(context).openDrawer(),
                       tooltip: 'Open menu',
                     ),
-                  if (!isSmallScreen)
-                    Text(
-                      'Inventory Control',
-                      style: TextStyle(
-                        fontSize: ResponsiveHelper.getTitleFontSize(context),
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                  Text(
+                    'Inventory Control',
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getTitleFontSize(context),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
+                  ),
                 ],
               ),
               Flexible(
                 child: Container(
                   constraints: BoxConstraints(
-                    maxWidth: isSmallScreen ? double.infinity : 300,
+                    maxWidth: isSmallScreen ? double.infinity : 320,
                   ),
-                  height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
                   ),
-                  child: const TextField(
+                  child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search...',
-                      prefixIcon: Icon(Icons.search, color: Colors.grey),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Colors.grey.shade500,
+                        size: 20,
+                      ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      hintStyle: TextStyle(color: Colors.grey),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -124,6 +143,9 @@ class InventoryControlScreen extends StatelessWidget {
     BuildContext context,
     List<InventoryQuickAction> actions,
   ) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final cardWidth = isMobile ? double.infinity : 150.0;
+
     return Wrap(
       spacing: 16,
       runSpacing: 16,
@@ -131,15 +153,15 @@ class InventoryControlScreen extends StatelessWidget {
         return GestureDetector(
           onTap: () => _handleQuickActionTap(action.navTarget, context),
           child: Container(
-            width: 150,
-            padding: const EdgeInsets.symmetric(vertical: 20),
+            width: cardWidth,
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 12,
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
               ],
@@ -151,14 +173,17 @@ class InventoryControlScreen extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: action.backgroundColor,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        action.backgroundColor,
+                        action.backgroundColor.withOpacity(0.8),
+                      ],
+                    ),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(
-                    action.icon,
-                    color: action.iconColor,
-                    size: 28,
-                  ),
+                  child: Icon(action.icon, color: action.iconColor, size: 28),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -200,9 +225,9 @@ class InventoryControlScreen extends StatelessWidget {
         break;
     }
     if (destination != null) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => destination!),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => destination!));
     }
   }
 
@@ -211,48 +236,56 @@ class InventoryControlScreen extends StatelessWidget {
       title: 'Recent Audits',
       trailing: TextButton(
         onPressed: () {},
-        child: const Text('View All'),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        ),
+        child: Text(
+          'View All',
+          style: TextStyle(
+            color: Colors.blue.shade600,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       child: Column(
-        children: audits
-            .map(
-              (audit) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        audit.date,
-                        style: const TextStyle(color: Colors.black87),
+        children: [
+          _tableHeader(const ['Date', 'Type', 'Status', 'Discrepancies']),
+          const Divider(height: 1),
+          ...audits.map(
+            (audit) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      audit.date,
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      audit.type,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Expanded(flex: 3, child: _statusChip(audit.status)),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '${audit.discrepancies}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade700,
                       ),
                     ),
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        audit.type,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: _statusChip(audit.status),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        '${audit.discrepancies}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            )
-            .toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -262,43 +295,49 @@ class InventoryControlScreen extends StatelessWidget {
       title: 'Recent Adjustments',
       trailing: TextButton(
         onPressed: () {},
-        child: const Text('View All'),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        ),
+        child: Text(
+          'View All',
+          style: TextStyle(
+            color: Colors.blue.shade600,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
       child: Column(
-        children: adjustments
-            .map(
-              (adjustment) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        adjustment.date,
-                        style: const TextStyle(color: Colors.black87),
-                      ),
+        children: [
+          _tableHeader(const ['Date', 'Reason', 'Status']),
+          const Divider(height: 1),
+          ...adjustments.map(
+            (adjustment) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      adjustment.date,
+                      style: TextStyle(color: Colors.grey.shade700),
                     ),
-                    Expanded(
-                      flex: 4,
-                      child: Text(
-                        adjustment.reason,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      adjustment.reason,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
-                    Expanded(
-                      flex: 3,
-                      child: _statusChip(adjustment.status),
-                    ),
-                  ],
-                ),
+                  ),
+                  Expanded(flex: 3, child: _statusChip(adjustment.status)),
+                ],
               ),
-            )
-            .toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
-
-
 
   Widget _sectionCard({
     required String title,
@@ -312,8 +351,8 @@ class InventoryControlScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 12,
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 16,
             offset: const Offset(0, 6),
           ),
         ],
@@ -324,8 +363,11 @@ class InventoryControlScreen extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final isMobile = ResponsiveHelper.isMobile(context);
-              
-              if (isMobile) {
+              final hasBoundedWidth =
+                  constraints.hasBoundedWidth && constraints.maxWidth.isFinite;
+              final shouldStack = isMobile || !hasBoundedWidth;
+
+              if (shouldStack) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -342,29 +384,51 @@ class InventoryControlScreen extends StatelessWidget {
                     ],
                   ],
                 );
-              } else {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (trailing != null) trailing,
-                  ],
-                );
               }
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (trailing != null) trailing,
+                ],
+              );
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           child,
         ],
+      ),
+    );
+  }
+
+  Widget _tableHeader(List<String> labels) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: List.generate(labels.length, (index) {
+          final flex = index == labels.length - 1 ? 2 : 3;
+          return Expanded(
+            flex: flex,
+            child: Text(
+              labels[index],
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.blueGrey.shade700,
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -373,14 +437,10 @@ class InventoryControlScreen extends StatelessWidget {
     Color color;
     switch (status.toLowerCase()) {
       case 'completed':
-        color = Colors.green.shade600;
-        break;
       case 'approved':
         color = Colors.green.shade600;
         break;
       case 'pending approval':
-        color = Colors.orange.shade600;
-        break;
       case 'pending':
         color = Colors.orange.shade600;
         break;
@@ -398,12 +458,8 @@ class InventoryControlScreen extends StatelessWidget {
       ),
       child: Text(
         status,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: color, fontWeight: FontWeight.w600),
       ),
     );
   }
 }
-

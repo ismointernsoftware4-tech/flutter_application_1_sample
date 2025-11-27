@@ -8,6 +8,7 @@ class NavigationItems {
     {'title': 'Procurement', 'icon': Icons.shopping_cart},
     {'title': 'Vendor Management', 'icon': Icons.business},
     {'title': 'GRN & Receiving', 'icon': Icons.local_shipping},
+    {'title': 'Receiving & QC', 'icon': Icons.inventory_2_outlined},
     {'title': 'Inventory Control', 'icon': Icons.assignment},
     {'title': 'Storage Locations', 'icon': Icons.location_on},
     {'title': 'Traceability', 'icon': Icons.timeline},
@@ -20,5 +21,3 @@ class NavigationItems {
   static List<String> get titles =>
       sidebarItems.map((item) => item['title'] as String).toList();
 }
-
-

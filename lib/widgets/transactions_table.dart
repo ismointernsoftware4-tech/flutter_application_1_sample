@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/dashboard_provider.dart';
+
+import '../providers/transaction_traceability_provider.dart';
 
 class TransactionsTable extends StatelessWidget {
   const TransactionsTable({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final transactions = Provider.of<DashboardProvider>(context).transactions;
+    final provider = context.watch<TransactionTraceabilityProvider>();
+    final records = provider.records.take(5).toList();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -50,47 +52,67 @@ class TransactionsTable extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Table(
-            columnWidths: const {
-              0: FlexColumnWidth(2),
-              1: FlexColumnWidth(1.5),
-              2: FlexColumnWidth(3),
-              3: FlexColumnWidth(1.5),
-              4: FlexColumnWidth(2),
-            },
-            children: [
-              // Header row
-              TableRow(
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                ),
-                children: const [
-                  _TableHeaderCell('DATE'),
-                  _TableHeaderCell('TYPE'),
-                  _TableHeaderCell('ITEM'),
-                  _TableHeaderCell('QUANTITY'),
-                  _TableHeaderCell('USER'),
-                ],
+          if (provider.isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 32),
+                child: CircularProgressIndicator(),
               ),
-              // Data rows
-              ...transactions.map((transaction) {
-                return TableRow(
-                  children: [
-                    _TableCell(transaction.date),
-                    _TableCell(
-                      transaction.type,
-                      isType: true,
-                      typeColor: transaction.type == 'GRN' ? Colors.green : Colors.grey,
-                    ),
-                    _TableCell(transaction.item),
-                    _TableCell(transaction.quantity),
-                    _TableCell(transaction.user),
+            )
+          else if (provider.error != null)
+            _StatusMessage(
+              message: provider.error!,
+              onRetry: provider.reload,
+            )
+          else if (records.isEmpty)
+            _StatusMessage(
+              message: 'No transactions yet.',
+              onRetry: provider.reload,
+              actionLabel: 'Reload',
+            )
+          else
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(1.5),
+                2: FlexColumnWidth(3),
+                3: FlexColumnWidth(1.5),
+                4: FlexColumnWidth(2),
+              },
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(4)),
+                  ),
+                  children: const [
+                    _TableHeaderCell('DATE'),
+                    _TableHeaderCell('TYPE'),
+                    _TableHeaderCell('ITEM'),
+                    _TableHeaderCell('QUANTITY'),
+                    _TableHeaderCell('USER / LOCATION'),
                   ],
-                );
-              }).toList(),
-            ],
-          ),
+                ),
+                ...records.map((record) {
+                  return TableRow(
+                    children: [
+                      _TableCell(record.dateTime),
+                      _TableCell(
+                        record.type,
+                        isType: true,
+                        typeColor: _typeColor(record.type),
+                      ),
+                      _TableCell(record.itemDetails),
+                      _QuantityCell(record.quantity),
+                      _TableCell(
+                        '${record.user}\n${record.location}',
+                      ),
+                    ],
+                  );
+                }),
+              ],
+            ),
         ],
       ),
     );
@@ -165,6 +187,73 @@ class _TableCell extends StatelessWidget {
   }
 }
 
+class _QuantityCell extends StatelessWidget {
+  const _QuantityCell(this.value);
 
+  final String value;
 
+  @override
+  Widget build(BuildContext context) {
+    final isPositive = value.trim().startsWith('+');
 
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Text(
+        value,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: isPositive ? Colors.green : Colors.redAccent,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusMessage extends StatelessWidget {
+  const _StatusMessage({
+    required this.message,
+    required this.onRetry,
+    this.actionLabel = 'Retry',
+  });
+
+  final String message;
+  final Future<void> Function() onRetry;
+  final String actionLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        children: [
+          Text(
+            message,
+            style: const TextStyle(color: Colors.black54),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: onRetry,
+            child: Text(actionLabel),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Color _typeColor(String type) {
+  switch (type.toLowerCase()) {
+    case 'grn':
+      return Colors.green;
+    case 'adjustment':
+      return Colors.orange;
+    case 'issue':
+      return Colors.red;
+    case 'transfer':
+      return Colors.blueGrey;
+    default:
+      return Colors.grey;
+  }
+}

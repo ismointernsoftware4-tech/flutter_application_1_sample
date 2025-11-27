@@ -6,6 +6,10 @@ import 'providers/auth_provider.dart';
 import 'providers/dashboard_provider.dart';
 import 'providers/item_column_visibility_provider.dart';
 import 'providers/item_table_provider.dart';
+import 'providers/grn_table_provider.dart';
+import 'providers/storage_location_table_provider.dart';
+import 'providers/approval_workflow_table_provider.dart';
+import 'providers/transaction_traceability_provider.dart';
 import 'screens/auth_gate.dart';
 
 void main() async {
@@ -38,6 +42,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => ItemTableProvider()),
         ChangeNotifierProvider(create: (_) => ItemColumnVisibilityProvider()),
+        ChangeNotifierProvider(create: (_) => GrnTableProvider()),
+        ChangeNotifierProvider(create: (_) => StorageLocationTableProvider()),
+        ChangeNotifierProvider(create: (_) => ApprovalWorkflowTableProvider()),
+        ChangeNotifierProvider(
+          create: (_) => TransactionTraceabilityProvider(),
+        ),
       ],
       child: MaterialApp(
         title: 'Embryo One',

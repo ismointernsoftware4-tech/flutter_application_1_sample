@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/dashboard_models.dart';
+import '../models/approval_workflows_schema.dart';
 import '../providers/approvals_provider.dart';
-import '../providers/dashboard_provider.dart';
+import '../providers/approval_workflow_table_provider.dart';
 import '../utils/responsive_helper.dart';
 
 class ApprovalsScreen extends StatelessWidget {
@@ -23,24 +24,58 @@ class _ApprovalsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<DashboardProvider>();
-    final filter = context.watch<ApprovalsFilterProvider>().activeFilter;
+    final filterProvider = context.watch<ApprovalsFilterProvider>();
+    final filter = filterProvider.activeFilter;
+    final tableProvider = context.watch<ApprovalWorkflowTableProvider>();
 
-    final items = provider.approvalWorkflows.where((item) {
+    if (tableProvider.isLoading) {
+      return Container(
+        color: Colors.grey[100],
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final entries = tableProvider.rows
+        .map((row) => _WorkflowEntry(row: row, item: _mapRowToItem(row)))
+        .toList();
+
+    final items = entries.where((entry) {
       if (filter == 'All') return true;
-      return item.status.toLowerCase() == filter.toLowerCase();
+      return entry.item.status.toLowerCase() == filter.toLowerCase();
     }).toList();
+
+    final pendingCount = entries
+        .where(
+          (entry) => entry.item.status.toLowerCase() == 'pending',
+        )
+        .length;
 
     return Container(
       color: Colors.grey[100],
       child: Column(
         children: [
-          _header(context, provider.approvalWorkflows.length),
+          _header(context, pendingCount),
           Expanded(
             child: SingleChildScrollView(
               padding: ResponsiveHelper.getScreenPadding(context),
               child: Column(
-                children: items.map(_workflowCard).toList(),
+                children: items.isEmpty
+                    ? [
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          margin: const EdgeInsets.only(top: 32),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Center(
+                            child: Text('No approval workflows found in schema.'),
+                          ),
+                        ),
+                      ]
+                    : items.map((entry) => _workflowCard(entry.item, entry.row)).toList(),
               ),
             ),
           ),
@@ -236,7 +271,11 @@ class _ApprovalsView extends StatelessWidget {
     );
   }
 
-  Widget _workflowCard(ApprovalWorkflowItem item) {
+  Widget _workflowCard(ApprovalWorkflowItem item, ApprovalWorkflowRow row) {
+    final canApprove = row.hasAction('Approve');
+    final canReject = row.hasAction('Reject');
+    final canView = row.hasAction('View') || row.hasAction('Details');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(24),
@@ -337,24 +376,27 @@ class _ApprovalsView extends StatelessWidget {
                 // Original Row for desktop/tablet
                 return Row(
                   children: [
-                    Flexible(
-                      child: _actionButton(Icons.check_circle, 'Approve', Colors.green),
-                    ),
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: _actionButton(Icons.close, 'Reject', Colors.red),
-                    ),
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: TextButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.remove_red_eye_outlined),
-                        label: const Text('View'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.blueGrey[700],
+                    if (canApprove)
+                      Flexible(
+                        child: _actionButton(Icons.check_circle, 'Approve', Colors.green),
+                      ),
+                    if (canApprove) const SizedBox(width: 12),
+                    if (canReject)
+                      Flexible(
+                        child: _actionButton(Icons.close, 'Reject', Colors.red),
+                      ),
+                    if (canReject) const SizedBox(width: 12),
+                    if (canView)
+                      Flexible(
+                        child: TextButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(Icons.remove_red_eye_outlined),
+                          label: const Text('View'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.blueGrey[700],
+                          ),
                         ),
                       ),
-                    ),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -428,5 +470,31 @@ class _ApprovalsView extends StatelessWidget {
       ),
     );
   }
+}
+
+ApprovalWorkflowItem _mapRowToItem(ApprovalWorkflowRow row) {
+  final priority = row.valueFor('priority').isEmpty ? 'Routine' : row.valueFor('priority');
+  final status = row.valueFor('status').isEmpty ? 'Pending' : row.valueFor('status');
+  final title = row.valueFor('type').isEmpty ? row.valueFor('description') : row.valueFor('type');
+
+  return ApprovalWorkflowItem(
+    priority: priority,
+    id: row.valueFor('id'),
+    date: row.valueFor('date'),
+    title: title,
+    description: row.valueFor('description'),
+    requestedBy: row.valueFor('requestedBy'),
+    status: status,
+  );
+}
+
+class _WorkflowEntry {
+  const _WorkflowEntry({
+    required this.row,
+    required this.item,
+  });
+
+  final ApprovalWorkflowRow row;
+  final ApprovalWorkflowItem item;
 }
 

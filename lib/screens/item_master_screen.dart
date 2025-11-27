@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/item_column_keys.dart';
 import '../models/dashboard_models.dart';
 import '../providers/item_column_visibility_provider.dart';
 import '../providers/item_table_provider.dart';
@@ -43,6 +42,49 @@ class ItemMasterScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const Spacer(),
+                    Consumer2<ItemTableProvider, ItemColumnVisibilityProvider>(
+                      builder: (context, tableProvider, columnProvider, _) {
+                        return IconButton(
+                          icon: tableProvider.isLoading || columnProvider.isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.refresh),
+                          onPressed: () async {
+                            // Reload both providers for instant JSON updates
+                            try {
+                              await Future.wait([
+                                tableProvider.reloadSchema(),
+                                columnProvider.reloadSchema(),
+                              ]);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Schema reloaded successfully from JSON!'),
+                                    backgroundColor: Colors.green,
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error reloading schema: $e'),
+                                    backgroundColor: Colors.red,
+                                    duration: const Duration(seconds: 3),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          tooltip: 'Reload from JSON (Instant Update)',
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -69,8 +111,15 @@ class ItemMasterScreen extends StatelessWidget {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Consumer2<ItemTableProvider, ItemColumnVisibilityProvider>(
+                      child:
+                          Consumer2<ItemTableProvider, ItemColumnVisibilityProvider>(
                         builder: (context, tableProvider, columnProvider, _) {
+                          if (tableProvider.isLoading || columnProvider.isLoading) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
                           final visibleColumns = columnProvider.visibleColumns;
                           final items = tableProvider.items;
 
@@ -186,23 +235,33 @@ class _ItemTable extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
-              blurRadius: 8,
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 16,
               offset: const Offset(0, 4),
+              spreadRadius: 0,
+            ),
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.02),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+              spreadRadius: 0,
             ),
           ],
         ),
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: Colors.grey.shade50,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
+                  top: Radius.circular(20),
+                ),
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.shade200, width: 1),
                 ),
               ),
               child: Row(
@@ -212,9 +271,11 @@ class _ItemTable extends StatelessWidget {
                         width: 150,
                         child: Text(
                           header,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: Colors.black54,
+                            color: Colors.grey.shade700,
+                            fontSize: 13,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ),
@@ -226,9 +287,9 @@ class _ItemTable extends StatelessWidget {
             ...items.map(
               (item) => Container(
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   border: Border(
-                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                    bottom: BorderSide(color: Colors.grey.shade100, width: 1),
                   ),
                 ),
                 child: Row(
@@ -276,37 +337,15 @@ class _ItemTable extends StatelessWidget {
     
     return Text(
       value.isEmpty ? '-' : value,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
-        color: Colors.black87,
+        color: Colors.grey.shade800,
+        height: 1.4,
       ),
     );
   }
 
-  String _resolveValue(ItemMaster item, String key) {
-    switch (key) {
-      case ItemColumnKeys.itemCode:
-        return item.itemCode;
-      case ItemColumnKeys.itemName:
-        return item.itemName;
-      case ItemColumnKeys.type:
-        return item.type;
-      case ItemColumnKeys.category:
-        return item.category;
-      case ItemColumnKeys.manufacturer:
-        return item.manufacturer;
-      case ItemColumnKeys.unit:
-        return item.unit;
-      case ItemColumnKeys.storage:
-        return item.storage;
-      case ItemColumnKeys.stock:
-        return item.stock.toString();
-      case ItemColumnKeys.status:
-        return item.status;
-      default:
-        return '';
-    }
-  }
+  String _resolveValue(ItemMaster item, String key) => item.valueFor(key);
 }
 
 class _ColumnSelectorPanel extends StatelessWidget {
@@ -317,17 +356,32 @@ class _ColumnSelectorPanel extends StatelessWidget {
   final bool expanded;
   final VoidCallback? onTogglePanel;
 
-  static const Map<String, IconData> _columnIcons = {
-    ItemColumnKeys.itemCode: Icons.qr_code_2,
-    ItemColumnKeys.itemName: Icons.label_important,
-    ItemColumnKeys.type: Icons.category,
-    ItemColumnKeys.category: Icons.widgets_outlined,
-    ItemColumnKeys.manufacturer: Icons.precision_manufacturing,
-    ItemColumnKeys.unit: Icons.straighten,
-    ItemColumnKeys.storage: Icons.inventory_2,
-    ItemColumnKeys.stock: Icons.storage,
-    ItemColumnKeys.status: Icons.verified_outlined,
-  };
+  // Dynamic icon mapping - gracefully handles any field key
+  static IconData _getIconForField(String key) {
+    // Map common field keys to icons, with fallback for unknown keys
+    final iconMap = {
+      'itemCode': Icons.qr_code_2,
+      'itemName': Icons.label_important,
+      'itemType': Icons.category,
+      'type': Icons.category,
+      'category': Icons.widgets_outlined,
+      'manufacturer': Icons.precision_manufacturing,
+      'unitOfMeasure': Icons.straighten,
+      'unit': Icons.straighten,
+      'storageConditions': Icons.inventory_2,
+      'storage': Icons.inventory_2,
+      'stock': Icons.storage,
+      'status': Icons.verified_outlined,
+      'hsCode': Icons.code,
+      'taxRate': Icons.percent,
+      'shelfLife': Icons.calendar_today,
+      'leadTime': Icons.schedule,
+      'unitPrice': Icons.attach_money,
+      'barcodeQR': Icons.qr_code,
+    };
+    
+    return iconMap[key] ?? Icons.view_list_rounded;
+  }
 
   const _ColumnSelectorPanel({
     required this.columns,
@@ -420,7 +474,7 @@ class _ColumnSelectorPanel extends StatelessWidget {
                           itemBuilder: (context, index) {
                             final column = columns[index];
                             final highlighted = isHighlighted?.call(column.key) ?? false;
-                            final icon = _columnIcons[column.key] ?? Icons.view_list_rounded;
+                            final icon = _getIconForField(column.key);
                             return InkWell(
                               onTap: () => onToggleHighlight?.call(column.key),
                               child: Container(

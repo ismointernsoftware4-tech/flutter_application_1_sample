@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../constants/item_column_keys.dart';
 import '../models/dashboard_models.dart';
 import '../providers/item_column_visibility_provider.dart';
 import '../providers/item_table_provider.dart';
@@ -98,8 +97,15 @@ class ItemManagementScreen extends StatelessWidget {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Consumer2<ItemTableProvider, ItemColumnVisibilityProvider>(
+                      child:
+                          Consumer2<ItemTableProvider, ItemColumnVisibilityProvider>(
                         builder: (context, tableProvider, columnProvider, _) {
+                          if (tableProvider.isLoading || columnProvider.isLoading) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
                           final visibleColumns = columnProvider.visibleColumns;
                           final items = tableProvider.items;
 
@@ -227,30 +233,7 @@ class _ItemTable extends StatelessWidget {
     );
   }
 
-  String _resolveValue(ItemMaster item, String key) {
-    switch (key) {
-      case ItemColumnKeys.itemCode:
-        return item.itemCode;
-      case ItemColumnKeys.itemName:
-        return item.itemName;
-      case ItemColumnKeys.type:
-        return item.type;
-      case ItemColumnKeys.category:
-        return item.category;
-      case ItemColumnKeys.manufacturer:
-        return item.manufacturer;
-      case ItemColumnKeys.unit:
-        return item.unit;
-      case ItemColumnKeys.storage:
-        return item.storage;
-      case ItemColumnKeys.stock:
-        return item.stock.toString();
-      case ItemColumnKeys.status:
-        return item.status;
-      default:
-        return '';
-    }
-  }
+  String _resolveValue(ItemMaster item, String key) => item.valueFor(key);
 }
 
 class _ColumnSelectorPanel extends StatelessWidget {

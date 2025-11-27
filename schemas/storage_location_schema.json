@@ -81,7 +81,8 @@
     "parentLocation",
     "capacity",
     "status",
-    "actions"
+    "actions",
+    "sameer"
   ],
   "sampleData": [
     {

@@ -21,23 +21,6 @@ class DashboardProvider extends ChangeNotifier {
 
   PurchaseOrderStatus _poStatus = PurchaseOrderStatus(draft: 65, issued: 35);
 
-  List<Transaction> _transactions = [
-    Transaction(
-      date: '2023-11-01 10:30',
-      type: 'GRN',
-      item: 'Paracetamol 500mg',
-      quantity: '1000',
-      user: 'Store Manager',
-    ),
-    Transaction(
-      date: '2023-11-02 14:15',
-      type: 'Adjustment',
-      item: 'Insulin Glargine',
-      quantity: '-2',
-      user: 'Store Keeper',
-    ),
-  ];
-
   List<ItemMaster> _itemMasterList = [
     ItemMaster(
       itemCode: 'ITM001',
@@ -170,21 +153,16 @@ class DashboardProvider extends ChangeNotifier {
           label: 'Vendor Category',
           required: true,
           type: VendorFieldType.dropdown,
-          options: ['Medical Supplies', 'Pharmaceuticals', 'Consumables', 'Equipment'],
+          options: [
+            'Medical Supplies',
+            'Pharmaceuticals',
+            'Consumables',
+            'Equipment',
+          ],
         ),
-        VendorFormField(
-          id: 'tax_id',
-          label: 'Tax ID / GSTIN',
-        ),
-        VendorFormField(
-          id: 'website',
-          label: 'Website',
-        ),
-        VendorFormField(
-          id: 'phone',
-          label: 'Phone Number',
-          required: true,
-        ),
+        VendorFormField(id: 'tax_id', label: 'Tax ID / GSTIN'),
+        VendorFormField(id: 'website', label: 'Website'),
+        VendorFormField(id: 'phone', label: 'Phone Number', required: true),
       ],
     ),
     VendorFormSection(
@@ -218,18 +196,9 @@ class DashboardProvider extends ChangeNotifier {
           type: VendorFieldType.dropdown,
           options: ['Net 30', 'Net 45', 'Net 60', 'Advance'],
         ),
-        VendorFormField(
-          id: 'bank_name',
-          label: 'Bank Name',
-        ),
-        VendorFormField(
-          id: 'account_number',
-          label: 'Account Number',
-        ),
-        VendorFormField(
-          id: 'compliance_docs',
-          label: 'Compliance Documents',
-        ),
+        VendorFormField(id: 'bank_name', label: 'Bank Name'),
+        VendorFormField(id: 'account_number', label: 'Account Number'),
+        VendorFormField(id: 'compliance_docs', label: 'Compliance Documents'),
       ],
     ),
   ];
@@ -261,18 +230,20 @@ class DashboardProvider extends ChangeNotifier {
 
   final List<PurchaseOrder> _purchaseOrders = [
     PurchaseOrder(
-      id: 'PO-2023-010',
+      id: 'PO-2023-001',
       vendor: 'PharmaCorp Ltd',
-      date: '2023-10-28',
-      amount: '\$12,450',
-      status: 'Draft',
+      date: '2023-10-27',
+      deliveryDate: '2023-11-05',
+      amount: '\$5000.00',
+      status: 'Issued',
     ),
     PurchaseOrder(
-      id: 'PO-2023-011',
+      id: 'PO-2023-002',
       vendor: 'BioMed Supplies',
-      date: '2023-10-29',
-      amount: '\$7,320',
-      status: 'Issued',
+      date: '2023-10-28',
+      deliveryDate: '2023-11-10',
+      amount: '\$1200.00',
+      status: 'Draft',
     ),
   ];
   final List<GoodsReceipt> _goodsReceipts = [
@@ -285,6 +256,67 @@ class DashboardProvider extends ChangeNotifier {
       status: 'Completed',
     ),
   ];
+  final List<String> _receivingTabs = const [
+    'Pending GRN',
+    'QC Check',
+    'Put-Away',
+  ];
+  final List<ReceivingTask> _pendingReceivingTasks = const [
+    ReceivingTask(
+      icon: Icons.local_shipping_outlined,
+      title: 'Vitrolife - Dock 2',
+      reference: 'PO-2024-101 • Due Today',
+      meta: '2 crates • Requires temp probe',
+      itemTags: ['G-Series Media', 'Ovoil'],
+      primaryLabel: 'Receive',
+      secondaryLabel: 'View PO',
+    ),
+    ReceivingTask(
+      icon: Icons.local_shipping_outlined,
+      title: 'CooperSurgical - Dock 4',
+      reference: 'PO-2024-102 • Due Tomorrow',
+      meta: 'Awaiting QA sample',
+      itemTags: ['Pipettes', 'Dishes'],
+      primaryLabel: 'Receive',
+      secondaryLabel: 'Call Driver',
+    ),
+  ];
+  final List<ReceivingTask> _qcCheckTasks = const [
+    ReceivingTask(
+      icon: Icons.thermostat,
+      title: "Quinn's Advantage Cleavage Medium",
+      reference: 'Lot: QA-2024-089',
+      meta: 'Temp Req: 2-8°C',
+      itemTags: ['COA Required'],
+      primaryLabel: 'Pass QC',
+      secondaryLabel: 'Reject',
+      primaryColor: Color(0xFF0F9D58),
+      secondaryColor: Color(0xFFE53935),
+    ),
+    ReceivingTask(
+      icon: Icons.science_outlined,
+      title: 'Sperm Wash Media',
+      reference: 'Lot: SWM-2024-234',
+      meta: 'Temp Req: 2-8°C',
+      itemTags: ['COA Required'],
+      primaryLabel: 'Pass QC',
+      secondaryLabel: 'Reject',
+      primaryColor: Color(0xFF0F9D58),
+      secondaryColor: Color(0xFFE53935),
+    ),
+  ];
+  final List<ReceivingTask> _putAwayTasks = const [
+    ReceivingTask(
+      icon: Icons.inventory_outlined,
+      title: 'Medline IVF Catheters',
+      reference: 'PO-2024-104',
+      meta: 'Staging Area A • 40 units',
+      itemTags: ['Assign Bin'],
+      primaryLabel: 'Put Away',
+      secondaryLabel: 'Print Label',
+    ),
+  ];
+  int _receivingTabIndex = 0;
   final Map<String, String> _vendorFieldValues = {};
 
   final List<InventoryQuickAction> _inventoryActions = const [
@@ -492,66 +524,6 @@ class DashboardProvider extends ChangeNotifier {
     ),
   ];
 
-  final List<TraceabilityRecord> _traceabilityRecords = const [
-    TraceabilityRecord(
-      dateTime: '2023-11-01 10:30',
-      type: 'GRN',
-      reference: 'GRN-2023-001',
-      itemDetails: 'Paracetamol 500mg',
-      quantity: '+1000',
-      user: 'Store Manager',
-      location: 'Main Store',
-    ),
-    TraceabilityRecord(
-      dateTime: '2023-11-02 14:15',
-      type: 'Adjustment',
-      reference: 'ADJ-2023-001',
-      itemDetails: 'Insulin Glargine',
-      quantity: '-2',
-      user: 'Store Keeper',
-      location: 'Pharmacy',
-    ),
-    TraceabilityRecord(
-      dateTime: '2023-11-03 09:00',
-      type: 'Issue',
-      reference: 'ISS-2023-055',
-      itemDetails: 'Surgical Gloves',
-      quantity: '-50',
-      user: 'Nurse Station A',
-      location: 'Ward A',
-    ),
-  ];
-
-  final List<ApprovalWorkflowItem> _approvalWorkflows = const [
-    ApprovalWorkflowItem(
-      priority: 'Routine',
-      id: 'AP-001',
-      date: '2023-10-25',
-      title: 'Purchase Requisition',
-      description: 'Surgical Gloves for IVF Lab',
-      requestedBy: 'Dr. Sarah Smith',
-      status: 'Pending',
-    ),
-    ApprovalWorkflowItem(
-      priority: 'High',
-      id: 'AP-002',
-      date: '2023-10-29',
-      title: 'Vendor Registration',
-      description: 'New Vendor: SafeHands Inc',
-      requestedBy: 'Procurement Officer',
-      status: 'Pending',
-    ),
-    ApprovalWorkflowItem(
-      priority: 'Urgent',
-      id: 'AP-003',
-      date: '2023-11-15',
-      title: 'Stock Adjustment',
-      description: 'Expiry Write-off: Insulin',
-      requestedBy: 'Pharmacy Supervisor',
-      status: 'Pending',
-    ),
-  ];
-
   final List<ReportSummary> _reportSummaries = const [
     ReportSummary(label: 'LOW STOCK ITEMS', value: '1'),
     ReportSummary(label: 'PENDING APPROVALS', value: '3'),
@@ -654,7 +626,6 @@ class DashboardProvider extends ChangeNotifier {
   List<CategoryInventory> get inventoryByCategory => _inventoryByCategory;
   StockStatus get stockStatus => _stockStatus;
   PurchaseOrderStatus get poStatus => _poStatus;
-  List<Transaction> get transactions => _transactions;
   List<ItemMaster> get itemMasterList => _itemMasterList;
   List<User> get usersList => _usersList;
   String get selectedNavItem => _selectedNavItem;
@@ -662,24 +633,53 @@ class DashboardProvider extends ChangeNotifier {
   bool get showAddItemSidebar => _showAddItemSidebar;
   bool get showAddLocationSidebar => _showAddLocationSidebar;
   bool get showAddVendorSidebar => _showAddVendorSidebar;
-  
+
   // Sidebar visibility state
   bool _sidebarVisible = true;
   bool get sidebarVisible => _sidebarVisible;
-  
+
   void toggleSidebar() {
     _sidebarVisible = !_sidebarVisible;
     notifyListeners();
   }
+
   NewUserForm get newUserForm => _newUserForm;
   List<String> get rolesList => _rolesList;
   List<Vendor> get vendors => List.unmodifiable(_vendors);
   FirebaseService get firebaseService => _firebaseService;
   List<PurchaseRequisition> get purchaseRequisitions =>
       List.unmodifiable(_purchaseRequisitions);
-  List<PurchaseOrder> get purchaseOrders =>
-      List.unmodifiable(_purchaseOrders);
+
+  void reorderPurchaseRequisition(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final item = _purchaseRequisitions.removeAt(oldIndex);
+    _purchaseRequisitions.insert(newIndex, item);
+    notifyListeners();
+  }
+
+  List<PurchaseOrder> get purchaseOrders => List.unmodifiable(_purchaseOrders);
   List<GoodsReceipt> get goodsReceipts => List.unmodifiable(_goodsReceipts);
+  List<String> get receivingTabs => List.unmodifiable(_receivingTabs);
+  int get receivingTabIndex => _receivingTabIndex;
+  List<ReceivingTask> get pendingReceivingTasks =>
+      List.unmodifiable(_pendingReceivingTasks);
+  List<ReceivingTask> get qcCheckTasks => List.unmodifiable(_qcCheckTasks);
+  List<ReceivingTask> get putAwayTasks => List.unmodifiable(_putAwayTasks);
+  List<ReceivingTask> receivingTasksForTab(int index) {
+    switch (index) {
+      case 0:
+        return pendingReceivingTasks;
+      case 1:
+        return qcCheckTasks;
+      case 2:
+        return putAwayTasks;
+      default:
+        return pendingReceivingTasks;
+    }
+  }
+
   List<InventoryQuickAction> get inventoryActions =>
       List.unmodifiable(_inventoryActions);
   List<InventoryAudit> get recentAudits => List.unmodifiable(_recentAudits);
@@ -687,10 +687,6 @@ class DashboardProvider extends ChangeNotifier {
       List.unmodifiable(_recentAdjustments);
   List<StorageLocation> get storageLocations =>
       List.unmodifiable(_storageLocations);
-  List<TraceabilityRecord> get traceabilityRecords =>
-      List.unmodifiable(_traceabilityRecords);
-  List<ApprovalWorkflowItem> get approvalWorkflows =>
-      List.unmodifiable(_approvalWorkflows);
   List<ReportSummary> get reportSummaries =>
       List.unmodifiable(_reportSummaries);
   List<ReportCategory> get reportCategories =>
@@ -704,19 +700,24 @@ class DashboardProvider extends ChangeNotifier {
       List.unmodifiable(_stockTransfers);
   List<BranchTransferRecord> get branchTransfers =>
       List.unmodifiable(_branchTransfers);
-  List<StockReturnRecord> get stockReturns =>
-      List.unmodifiable(_stockReturns);
+  List<StockReturnRecord> get stockReturns => List.unmodifiable(_stockReturns);
   List<InternalConsumptionRecord> get internalConsumptions =>
       List.unmodifiable(_internalConsumptions);
   List<VendorFormSection> get vendorSections =>
       _vendorSections.map((section) => section.copyWith()).toList();
   Map<String, bool> get vendorSectionsExpanded =>
       Map.unmodifiable(_vendorSectionsExpanded);
-  String vendorFieldValue(String fieldId) =>
-      _vendorFieldValues[fieldId] ?? '';
+  String vendorFieldValue(String fieldId) => _vendorFieldValues[fieldId] ?? '';
 
   void setSelectedNavItem(String item) {
     _selectedNavItem = item;
+    notifyListeners();
+  }
+
+  void setReceivingTabIndex(int index) {
+    if (index < 0 || index >= _receivingTabs.length) return;
+    if (_receivingTabIndex == index) return;
+    _receivingTabIndex = index;
     notifyListeners();
   }
 
@@ -725,7 +726,6 @@ class DashboardProvider extends ChangeNotifier {
     _newUserForm = NewUserForm();
     notifyListeners();
   }
-
 
   void hideAddUserFormDialog() {
     _showAddUserForm = false;
@@ -784,13 +784,16 @@ class DashboardProvider extends ChangeNotifier {
     if (_newUserForm.fullName.isEmpty ||
         _newUserForm.email.isEmpty ||
         _newUserForm.password.length < 6) {
-      throw Exception('Please fill all fields and use a password with at least 6 characters.');
+      throw Exception(
+        'Please fill all fields and use a password with at least 6 characters.',
+      );
     }
 
     try {
       final now = DateTime.now();
-      final formattedDate = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-      
+      final formattedDate =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
       final newUser = User(
         name: _newUserForm.fullName,
         email: _newUserForm.email,
@@ -799,12 +802,12 @@ class DashboardProvider extends ChangeNotifier {
         lastLogin: formattedDate,
         password: _newUserForm.password,
       );
-      
+
       await _firebaseService.createAuthUser(newUser.email, newUser.password);
 
       // Always add to local list for immediate UI update
       _usersList.add(newUser);
-      
+
       // Try to save to Firebase (non-blocking)
       try {
         await _firebaseService.saveUser(newUser);
@@ -812,7 +815,7 @@ class DashboardProvider extends ChangeNotifier {
         // Handle error - Firebase save failed but user is still added locally
         print('Error saving user to Firebase: $e');
       }
-      
+
       hideAddUserFormDialog();
     } catch (e) {
       throw Exception(e.toString());
@@ -966,8 +969,7 @@ class DashboardProvider extends ChangeNotifier {
 
   void toggleVendorSection(String sectionId) {
     if (_vendorSectionsExpanded.containsKey(sectionId)) {
-      _vendorSectionsExpanded[sectionId] =
-          !_vendorSectionsExpanded[sectionId]!;
+      _vendorSectionsExpanded[sectionId] = !_vendorSectionsExpanded[sectionId]!;
       notifyListeners();
     }
   }
@@ -1031,6 +1033,7 @@ class DashboardProvider extends ChangeNotifier {
     _storageLocations = [..._storageLocations, location];
     notifyListeners();
   }
+
   void updateSystemConfiguration(SystemConfiguration config) {
     _systemConfiguration = config;
     notifyListeners();
@@ -1058,7 +1061,7 @@ class DashboardProvider extends ChangeNotifier {
         }
       }
     }
-    
+
     // Add vendor name explicitly
     vendorData['vendor_name'] = vendorName;
     vendorData['name'] = vendorName;
@@ -1084,6 +1087,11 @@ class DashboardProvider extends ChangeNotifier {
     _vendors = [..._vendors, vendor];
     notifyListeners();
     resetVendorFormFields();
+  }
+
+  void addVendor(Vendor vendor) {
+    _vendors = [..._vendors, vendor];
+    notifyListeners();
   }
 
   void updateVendorSection(
@@ -1143,9 +1151,12 @@ class DashboardProvider extends ChangeNotifier {
           category: data['category'] ?? '',
           unit: data['unitOfMeasure'] ?? data['unit'] ?? '',
           storage: data['storageConditions'] ?? data['storage'] ?? '',
-          stock: (data['stock'] ?? data['quantity'] ?? 0) is int 
-              ? (data['stock'] ?? data['quantity'] ?? 0) 
-              : int.tryParse((data['stock'] ?? data['quantity'] ?? '0').toString()) ?? 0,
+          stock: (data['stock'] ?? data['quantity'] ?? 0) is int
+              ? (data['stock'] ?? data['quantity'] ?? 0)
+              : int.tryParse(
+                      (data['stock'] ?? data['quantity'] ?? '0').toString(),
+                    ) ??
+                    0,
           status: data['status'] ?? 'Active',
         );
       }).toList();
@@ -1162,10 +1173,10 @@ class DashboardProvider extends ChangeNotifier {
     try {
       // Save to Firestore
       final docId = await _firebaseService.saveItem(itemData);
-      
+
       // Reload items from Firestore to get the latest data
       await loadItems();
-      
+
       print('Item saved successfully with ID: $docId');
     } catch (e) {
       print('Error saving item: $e');
@@ -1173,4 +1184,3 @@ class DashboardProvider extends ChangeNotifier {
     }
   }
 }
-

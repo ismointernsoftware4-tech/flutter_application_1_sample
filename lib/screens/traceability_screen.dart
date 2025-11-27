@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/dashboard_models.dart';
-import '../providers/dashboard_provider.dart';
+import '../providers/transaction_traceability_provider.dart';
 import '../utils/responsive_helper.dart';
 
 class TraceabilityScreen extends StatelessWidget {
@@ -10,7 +10,9 @@ class TraceabilityScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final records = context.watch<DashboardProvider>().traceabilityRecords;
+    final provider = context.watch<TransactionTraceabilityProvider>();
+    final records = provider.records;
+    final columns = provider.columns;
 
     return Container(
       color: Colors.grey[100],
@@ -24,7 +26,13 @@ class TraceabilityScreen extends StatelessWidget {
                 children: [
                   _filters(),
                   const SizedBox(height: 20),
-                  _table(records),
+                  _table(
+                    columns: columns,
+                    records: records,
+                    isLoading: provider.isLoading,
+                    error: provider.error,
+                    onRetry: provider.reload,
+                  ),
                 ],
               ),
             ),
@@ -247,15 +255,14 @@ class TraceabilityScreen extends StatelessWidget {
     );
   }
 
-  Widget _table(List<TraceabilityRecord> records) {
-    final headers = [
-      'Date & Time',
-      'Type',
-      'Reference',
-      'Item Details',
-      'Quantity',
-      'User / Location',
-    ];
+  Widget _table({
+    required List<String> columns,
+    required List<TraceabilityRecord> records,
+    required bool isLoading,
+    required String? error,
+    required Future<void> Function() onRetry,
+  }) {
+    final displayColumns = _buildColumns(columns);
 
     return Container(
       width: double.infinity,
@@ -281,11 +288,11 @@ class TraceabilityScreen extends StatelessWidget {
               ),
             ),
             child: Row(
-              children: headers
+              children: displayColumns
                   .map(
-                    (header) => Expanded(
+                    (column) => Expanded(
                       child: Text(
-                        header,
+                        column.label,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           color: Colors.black54,
@@ -297,73 +304,193 @@ class TraceabilityScreen extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-          ...records.map(
-            (record) => Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              decoration: const BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: Color(0xFFE5E7EB)),
+          if (isLoading)
+            SizedBox(
+              height: 220,
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: Colors.blueGrey[700],
                 ),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: Text(record.dateTime)),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Icon(
-                          _typeIcon(record.type),
-                          size: 18,
-                          color: Colors.grey[700],
+            )
+          else if (error != null)
+            _tableMessage(
+              message: error,
+              actionLabel: 'Retry',
+              onPressed: onRetry,
+            )
+          else if (records.isEmpty)
+            _tableMessage(
+              message: 'No traceability data available.',
+              onPressed: onRetry,
+              actionLabel: 'Reload',
+            )
+          else
+            ...records.map(
+              (record) => Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFE5E7EB)),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: displayColumns
+                      .map(
+                        (column) => Expanded(
+                          child: _buildCell(column.key, record),
                         ),
-                        const SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            record.type,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: _linkText(record.reference),
-                  ),
-                  Expanded(child: Text(record.itemDetails)),
-                  Expanded(
-                    child: Text(
-                      record.quantity,
-                      style: TextStyle(
-                        color: record.quantity.startsWith('+')
-                            ? Colors.green
-                            : Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(record.user),
-                        Text(
-                          record.location,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                      )
+                      .toList(),
+                ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCell(String key, TraceabilityRecord record) {
+    switch (key) {
+      case 'dateTime':
+        return Text(record.dateTime);
+      case 'type':
+        return Row(
+          children: [
+            Icon(
+              _typeIcon(record.type),
+              size: 18,
+              color: Colors.grey[700],
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                record.type,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        );
+      case 'reference':
+        return _linkText(record.reference);
+      case 'item':
+        return Text(record.itemDetails);
+      case 'quantity':
+        return Text(
+          record.quantity,
+          style: TextStyle(
+            color:
+                record.quantity.startsWith('+') ? Colors.green : Colors.redAccent,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+      case 'userLocation':
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(record.user),
+            Text(
+              record.location,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+              ),
+            ),
+          ],
+        );
+      case 'user':
+        return Text(record.user);
+      case 'location':
+        return Text(record.location);
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _tableMessage({
+    required String message,
+    required Future<void> Function() onPressed,
+    required String actionLabel,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () {
+              onPressed();
+            },
+            child: Text(actionLabel),
           ),
         ],
       ),
     );
+  }
+
+  List<_TraceabilityColumn> _buildColumns(List<String> columns) {
+    if (columns.isEmpty) {
+      return const [
+        _TraceabilityColumn('dateTime', 'Date & Time'),
+        _TraceabilityColumn('type', 'Type'),
+        _TraceabilityColumn('reference', 'Reference'),
+        _TraceabilityColumn('item', 'Item Details'),
+        _TraceabilityColumn('quantity', 'Quantity'),
+        _TraceabilityColumn('userLocation', 'User / Location'),
+      ];
+    }
+
+    final hasUser = columns.contains('user');
+    final hasLocation = columns.contains('location');
+
+    final configs = <_TraceabilityColumn>[];
+    for (final column in columns) {
+      if (column == 'location' && hasUser) {
+        continue;
+      }
+      if (column == 'user' && hasLocation) {
+        configs.add(const _TraceabilityColumn('userLocation', 'User / Location'));
+      } else {
+        configs.add(
+          _TraceabilityColumn(
+            column,
+            _columnLabel(column),
+          ),
+        );
+      }
+    }
+    return configs;
+  }
+
+  String _columnLabel(String key) {
+    switch (key) {
+      case 'dateTime':
+        return 'Date & Time';
+      case 'type':
+        return 'Type';
+      case 'reference':
+        return 'Reference';
+      case 'item':
+        return 'Item Details';
+      case 'quantity':
+        return 'Quantity';
+      case 'user':
+        return 'User';
+      case 'location':
+        return 'Location';
+      default:
+        return key;
+    }
   }
 
   IconData _typeIcon(String type) {
@@ -374,6 +501,8 @@ class TraceabilityScreen extends StatelessWidget {
         return Icons.autorenew;
       case 'issue':
         return Icons.north_east;
+      case 'transfer':
+        return Icons.swap_horiz;
       default:
         return Icons.info_outline;
     }
@@ -389,5 +518,12 @@ class TraceabilityScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _TraceabilityColumn {
+  const _TraceabilityColumn(this.key, this.label);
+
+  final String key;
+  final String label;
 }
 

@@ -8,7 +8,8 @@
     "item",
     "quantity",
     "user",
-    "location"
+    "location",
+    "sameer"
   ],
   "sampleData": [
     {

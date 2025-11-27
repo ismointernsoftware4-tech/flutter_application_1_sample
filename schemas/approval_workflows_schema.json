@@ -8,7 +8,8 @@
     "description",
     "requestedBy",
     "priority",
-    "actions"
+    "actions",
+    "sameer"
   ],
   "sampleData": [
     {
@@ -18,7 +19,7 @@
       "description": "Surgical Gloves for IVF Lab",
       "requestedBy": "Dr. Sarah Smith",
       "priority": "High",
-      "actions": ["Approve", "Reject"]
+      "actions": ["Approve", "Reject", "Sameer"]
     },
     {
       "id": "AP-002",
@@ -55,6 +56,15 @@
       "requestedBy": "Procurement Officer",
       "priority": "Normal",
       "actions": ["Approve", "Reject"]
+    },
+    {
+     "id": "AP-005",
+     "date": "2023-11-22",
+     "type": "Vendor Registration 3",
+     "description": "surya",
+    "requestedBy": "Procurement Officer",
+    "priority": "Normal",
+    "actions": ["Approve", "Reject"]
     }
   ]
 }
